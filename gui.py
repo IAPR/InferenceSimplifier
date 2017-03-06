@@ -26,11 +26,11 @@ class InferenceSolver(QWidget):
 
         self.main_layout = QGridLayout()
         self.main_layout.addWidget(self.inst_lbl, 0, 0)
-        self.main_layout.addLayout(self.hlayout, 0, 1)
+        self.main_layout.addLayout(self.hlayout, 1, 0)
 
         self.refresh_button.clicked.connect(self.Evaluate)
 
-        self.setLayout(mainLayout)
+        self.setLayout(self.main_layout)
         self.setWindowTitle("My first expert system")
 
     def Evaluate(self):
