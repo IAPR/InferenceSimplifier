@@ -29,7 +29,7 @@ class Compiler:
         if(self.tree == []):
             new_leaf = Leaf(symbol, self.next_sign)
             self.tree.append(new_leaf)
-            self.par_stack(self.tree[0])
+            self.par_stack.append(self.tree[0])
             self.root = self.tree[0]
 
         elif(symbol.code == "PAR_BEGIN"):
@@ -69,12 +69,15 @@ class Compiler:
 
     def PrintTree(self):
         # PRINT ALL THE TREE
-        print("::TREE::")
+        prnt_str = "::TREE::"
         for i in self.tree:
-            print("SYM", i, "SI", i.sign, "\n\tUP", i.upper, "\n\tLEFT", i.left, "\n\tRIGHT", i.right)
-        print("ROOT", self.root)
-        print("None", id(None))
-        print("\n")
+            prnt_str += "\nSYM" + str(i)
+            prnt_str += "\nSI" + str(i.sign)
+            prnt_str += "\n\tUP" + str(i.upper)
+            prnt_str += "\n\tLEFT" + str(i.left)
+            prnt_str += "\n\tRIGHT" + str(i.right)
+        prnt_str += "\n"
+        return prnt_str
 
     def ParseStatement(self, statement):
         if(statement == ""):

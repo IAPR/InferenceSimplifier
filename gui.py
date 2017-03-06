@@ -18,8 +18,10 @@ class InferenceSolver(QWidget):
 
         self.refresh_button = QPushButton("Evaluate!")
 
-        self.results = QPlainTextEdit()
-        self.results.setReadOnly(True)
+        self.ant_results = QPlainTextEdit()
+        self.cnt_results = QPlainTextEdit()
+        self.ant_results.setReadOnly(True)
+        self.cnt_results.setReadOnly(True)
 
         self.hlayout = QHBoxLayout()
         self.hlayout.addWidget(self.antecedents)
@@ -30,7 +32,8 @@ class InferenceSolver(QWidget):
         self.main_layout = QGridLayout()
         self.main_layout.addWidget(self.inst_lbl, 0, 0)
         self.main_layout.addLayout(self.hlayout, 1, 0)
-        self.main_layout.addWidget(self.results, 2, 0)
+        self.main_layout.addWidget(self.ant_results, 2, 0)
+        self.main_layout.addWidget(self.cnt_results, 3, 0)
 
         self.refresh_button.clicked.connect(self.Evaluate)
 
@@ -43,4 +46,5 @@ class InferenceSolver(QWidget):
         ant_ev.ParseStatement(self.antecedents.text())
         print("Consequents:", self.consequents.text())
         con_ev = Compiler()
-
+        self.ant_results.setPlainText(ant_ev.PrintTree())
+        self.cnt_results.setPlainText(cnt_ev.PrintTree())
