@@ -1,6 +1,11 @@
-from compiler import Compiler
+#!/usr/bin/python3
+from gui import InferenceSolver
+from PyQt5.QtCore import *
+from PyQt5.QtWidgets import *
+import sys
 
-comp = Compiler()
-comp.ParseStatement("pequeno v lazo ^ !lazo -> (agua <-> liquido)")
+app = QApplication(sys.argv)
+screen = InferenceSolver()
+screen.show()
 
-
+sys.exit(app.exec_())
