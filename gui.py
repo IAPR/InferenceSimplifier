@@ -19,9 +19,9 @@ class InferenceSolver(QWidget):
         self.refresh_button = QPushButton("Evaluate!")
 
         self.ant_results = QPlainTextEdit()
-        self.cnt_results = QPlainTextEdit()
+        self.con_results = QPlainTextEdit()
         self.ant_results.setReadOnly(True)
-        self.cnt_results.setReadOnly(True)
+        self.con_results.setReadOnly(True)
 
         self.hlayout = QHBoxLayout()
         self.hlayout.addWidget(self.antecedents)
@@ -33,7 +33,7 @@ class InferenceSolver(QWidget):
         self.main_layout.addWidget(self.inst_lbl, 0, 0)
         self.main_layout.addLayout(self.hlayout, 1, 0)
         self.main_layout.addWidget(self.ant_results, 2, 0)
-        self.main_layout.addWidget(self.cnt_results, 3, 0)
+        self.main_layout.addWidget(self.con_results, 3, 0)
 
         self.refresh_button.clicked.connect(self.Evaluate)
 
@@ -41,10 +41,16 @@ class InferenceSolver(QWidget):
         self.setWindowTitle("My first expert system")
 
     def Evaluate(self):
-        print("Antecedents:", self.antecedents.text())
-        ant_ev = Compiler()
-        ant_ev.ParseStatement(self.antecedents.text())
-        print("Consequents:", self.consequents.text())
-        con_ev = Compiler()
-        self.ant_results.setPlainText(ant_ev.PrintTree())
-        self.cnt_results.setPlainText(cnt_ev.PrintTree())
+        ant_statement = self.antecedents.text().strip()
+        if(ant_statement != ""):
+            print("Antecedents:", ant_statement)
+            ant_ev = Compiler()
+            ant_ev.ParseStatement(ant_statement)
+            ant_ev.PrintTree()
+
+        con_statement = self.consequents.text().strip()
+        if(con_statement != ""):
+            print("Consequents:", con_statement)
+            con_ev = Compiler()
+            con_ev.ParseStatement(con_statement)
+            con_ev.PrintTree()
