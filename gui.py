@@ -100,12 +100,12 @@ class InferenceSolver(QWidget):
             ars = []
             if(ar == None):
                 return []
-            elif(ar.symbol.code == "OP_OR" and ar.sign):
-                if(ar.left.symbol.code == "OP_OR" and ar.left.sign):
+            elif(ar.symbol.code == "OP_AND" and ar.sign):
+                if(ar.left.symbol.code == "OP_AND" and ar.left.sign):
                     ars = ars + FNCBranches(ar.left)
                 else:
                     ars.append(ar.left)
-                if(ar.right.symbol.code == "OP_OR" and ar.right.sign):
+                if(ar.right.symbol.code == "OP_AND" and ar.right.sign):
                     ars = ars + FNCBranches(ar.right)
                 else:
                     ars.append(ar.right)
@@ -125,9 +125,15 @@ class InferenceSolver(QWidget):
         st_str = ""
         for ant in ants:
             for con in cons:
-                st_str += ant_ev.ConvertToString(ant)
-                st_str += " -> "
-                st_str += con_ev.ConvertToString(con)
-                st_str += "\n"
+                if(con.symbol.code == "OP_OR"):
+                    st_str += ant_ev.ConvertToString(ant) + "^ " 
+                    st_str += con_ev.ConvertToString(con.right) + "-> " 
+                    st_str += con_ev.ConvertToString(con.left) + "\n"
+                    st_str += ant_ev.ConvertToString(ant) + "^ " 
+                    st_str += con_ev.ConvertToString(con.left) + "-> " 
+                    st_str += con_ev.ConvertToString(con.right) + "\n"
+                else:
+                    st_str += ant_ev.ConvertToString(ant) + "-> " 
+                    st_str += con_ev.ConvertToString(con) + "\n"
         self.statements.setPlainText(st_str)
 

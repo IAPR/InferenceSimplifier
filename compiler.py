@@ -178,8 +178,8 @@ class Compiler:
                 elif( self.DeMorganOR(leaf) ):
                     print("MoOR:", self.ConvertToString(self.root))
                     has_changed = True
-                elif( self.DistribAND(leaf) ):
-                    print("DAND:", self.ConvertToString(self.root))
+                elif( self.DistribOR(leaf) ):
+                    print("DiOR:", self.ConvertToString(self.root))
                     has_changed = True
                     self.SimplifyToMinimum()
 
@@ -503,6 +503,53 @@ class Compiler:
                 rr2 = self.DuplicateTree(rr1)
 
                 nsym = Symbol("^")
+
+                nll = Leaf(nsym, True, l, ll1, rl1)
+                self.tree.append(nll)
+                ll1.upper = nll
+                rl1.upper = nll
+
+                nlr = Leaf(nsym, True, l, ll2, rr1)
+                self.tree.append(nlr)
+                ll2.upper = nlr
+                rr1.upper = nlr
+
+                nrl = Leaf(nsym, True, r, lr1, rl2)
+                self.tree.append(nrl)
+                lr1.upper = nrl
+                rl2.upper = nrl
+
+                nrr = Leaf(nsym, True, r, lr2, rr2)
+                self.tree.append(nrr)
+                lr2.upper = nrr
+                rr2.upper = nrr
+
+                l.left = nll
+                l.right = nlr
+                r.left = nrl
+                r.right = nrr
+
+                return True
+        return False
+    
+    def DistribOR(self,leaf):
+        if(leaf.symbol.code == "OP_OR"):
+            l = leaf.left
+            r = leaf.right
+            if(l.symbol.code == "OP_AND" and r.symbol.code == "OP_AND" ):
+                leaf.symbol = Symbol("^")
+
+                ll1 = l.left
+                lr1 = l.right
+                rl1 = r.left
+                rr1 = r.right
+
+                ll2 = self.DuplicateTree(ll1)
+                lr2 = self.DuplicateTree(lr1)
+                rl2 = self.DuplicateTree(rl1)
+                rr2 = self.DuplicateTree(rr1)
+
+                nsym = Symbol("v")
 
                 nll = Leaf(nsym, True, l, ll1, rl1)
                 self.tree.append(nll)
