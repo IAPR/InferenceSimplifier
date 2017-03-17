@@ -87,11 +87,11 @@ class InferenceSolver(QWidget):
                 return []
             elif(ar.symbol.code == "OP_OR" and ar.sign):
                 if(ar.left.symbol.code == "OP_OR" and ar.left.sign):
-                    ars = ars + findBranches(ar.left)
+                    ars = ars + FNDBranches(ar.left)
                 else:
                     ars.append(ar.left)
                 if(ar.right.symbol.code == "OP_OR" and ar.right.sign):
-                    ars = ars + findBranches(ar.right)
+                    ars = ars + FNDBranches(ar.right)
                 else:
                     ars.append(ar.right)
             return ars
@@ -102,11 +102,11 @@ class InferenceSolver(QWidget):
                 return []
             elif(ar.symbol.code == "OP_OR" and ar.sign):
                 if(ar.left.symbol.code == "OP_OR" and ar.left.sign):
-                    ars = ars + findBranches(ar.left)
+                    ars = ars + FNCBranches(ar.left)
                 else:
                     ars.append(ar.left)
                 if(ar.right.symbol.code == "OP_OR" and ar.right.sign):
-                    ars = ars + findBranches(ar.right)
+                    ars = ars + FNCBranches(ar.right)
                 else:
                     ars.append(ar.right)
             return ars
