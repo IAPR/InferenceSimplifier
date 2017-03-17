@@ -15,6 +15,9 @@ class Leaf:
         self.right = right
         self.sign = isNeg
 
-    def __str__(self):
-        ret_str = "[{1}]({0})".format( id(self) % 10000, self.symbol )
+    def __repr__(self):
+        ret_str = "[{1}][{2}]({0})".format( id(self) % 1000, self.symbol, self.sign )
         return ret_str
+
+    def __str__(self):
+        return str(self.symbol)
