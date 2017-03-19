@@ -99,7 +99,7 @@ class InferenceSolver(QWidget):
         def FNCBranches(ar):
             ars = []
             if(ar == None):
-                return []
+                pass
             elif(ar.symbol.code == "OP_AND" and ar.sign):
                 if(ar.left.symbol.code == "OP_AND" and ar.left.sign):
                     ars = ars + FNCBranches(ar.left)
@@ -111,8 +111,27 @@ class InferenceSolver(QWidget):
                     ars.append(ar.right)
             return ars
 
+        def ConsequentBranches(ar):
+            ars = []
+            if(ar == None):
+                pass
+            elif(ar.symbol.code == "OP_OR" and ar.sign):
+                if(ar.left.symbol.code == "OP_OR" and ar.sign):
+                    ars = ars + ConsequentBranches(ar.left)
+                else:
+                    ars.append(ar.left)
+                if(ar.right.symbol.code == "OP_OR" and ar.sign):
+                    ars = ars + ConsequentBranches(ar.right)
+                else:
+                    ars.append(ar.right)
+            return ars
+
         ants = FNDBranches(ant_root)
         cons = FNCBranches(con_root)
+        sep_cons = []
+        for c in FNCBranches(con_root):
+            print(c)
+            sep_cons += ConsequentBranches(c)
 
         if(ants == []):
             ants.append(ant_root)
@@ -121,6 +140,7 @@ class InferenceSolver(QWidget):
 
         print(ants, ant_root)
         print(cons, con_root)
+        print(sep_cons)
 
         st_str = ""
         for ant in ants:
