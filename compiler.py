@@ -1,6 +1,6 @@
 from symbol import Symbol
 from copy import deepcopy,copy
-from tree import Tree, Leaf
+from leaf import Leaf
 
 class Compiler:
     def __init__(self):
@@ -579,68 +579,3 @@ class Compiler:
                 return True
         return False
 
-
-    def Distribution(self, leaf):
-        if(leaf.symbol.code == "OP_AND"):
-            main_sym = ("OP_AND", "^")
-            sec_sym = ("OP_OR", "v")
-        elif(leaf.symbol.code == "OP_OR"):
-            sec_sym = ("OP_AND", "^")
-            main_sym = ("OP_OR", "v")
-        else:
-            return False
-
-        has_changed = False
-        if(leaf.symbol.code == main_sym[0]):
-            l = leaf.left
-            r = leaf.right
-            if(l.symbol.code == sec_sym[0] and r.symbol.code == sec_sym[0] ):
-                ll = l.left
-                lr = l.right
-                rl = r.left
-                rr = r.right
-                if(ll.symbol.mask == rl.symbol.mask and ll.sign == rl.sign):
-                    has_changed = True
-                    # Change first node to v
-                    leaf.symbol = Symbol(sec_sym[1])
-                    # Change left node of leaf
-                    ll.upper = leaf
-                    leaf.left = ll
-                    # Change right node of leaf
-                    r.symbol = Symbol(main_sym[1])
-                    r.left = lr
-                    lr.upper = r
-                elif(ll.symbol.mask == rr.symbol.mask and ll.sign == rr.sign):
-                    has_changed = True
-                    # Change first node to v
-                    leaf.symbol = Symbol(sec_sym[1])
-                    # Change left node of leaf
-                    ll.upper = leaf
-                    leaf.left = ll
-                    # Change right node of leaf
-                    r.symbol = Symbol(main_sym[1])
-                    r.right = lr
-                    lr.upper = r
-                elif(lr.symbol.mask == rl.symbol.mask and lr.sign == rl.sign):
-                    has_changed = True
-                    # Change first node to v
-                    leaf.symbol = Symbol(sec_sym[1])
-                    # Change left node of leaf
-                    lr.upper = leaf
-                    leaf.left = lr
-                    # Change right node of leaf
-                    r.symbol = Symbol(main_sym[1])
-                    r.left = ll
-                    ll.upper = r
-                elif(lr.symbol.mask == rr.symbol.mask and lr.sign == rr.sign):
-                    has_changed = True
-                    # Change first node to v
-                    leaf.symbol = Symbol(sec_sym[1])
-                    # Change left node of leaf
-                    lr.upper = leaf
-                    leaf.left = lr
-                    # Change right node of leaf
-                    r.symbol = Symbol(main_sym[1])
-                    r.right = ll
-                    ll.upper = r
-        return has_changed
