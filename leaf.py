@@ -1,12 +1,5 @@
 from symbol import Symbol
 
-class Tree:
-    def __init__(self):
-        leaves_list = []
-
-    def __str__(self):
-        pass
-
 class Leaf:
     def __init__(self, symbol, isNeg, upper=None, left=None, right=None):
         self.symbol = symbol
