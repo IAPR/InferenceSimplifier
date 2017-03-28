@@ -1,6 +1,9 @@
 from PyQt5.QtCore import *
 from PyQt5.QtWidgets import *
-from compiler import Compiler
+from antecedent import Antecedent
+from consequent import Consequent
+from rule import Rule
+from workmemory import WorkMemory
 
 # Two labels
 # Two Textboxes
@@ -59,101 +62,40 @@ class InferenceSolver(QWidget):
             raise Exception
 
         ant_str = "Antecedents:\n"
-        ant_ev = Compiler()
-        ant_ev.ParseStatement(ant_statement)
-        ant_str += ant_ev.ConvertToString(ant_ev.root) + "\n"
+        ant_ev = Antecedent(ant_statement)
+        ant_str += str(ant_ev) + "\n"
         ant_ev.SimplifyFND()
         ant_str += "Simplified: \n"
-        ant_str += ant_ev.ConvertToString(ant_ev.root) + "\n"
+        ant_str += str(ant_ev) + "\n"
         self.ant_results.setPlainText(ant_str)
 
         con_str = "Consequents:\n"
-        con_ev = Compiler()
-        con_ev.ParseStatement(con_statement)
-        con_str += con_ev.ConvertToString(con_ev.root) + "\n"
+        con_ev = Consequent(con_statement)
+        con_str += str(con_ev) + "\n"
         con_ev.SimplifyFNC()
         con_str += "Simplified: \n"
-        con_str += con_ev.ConvertToString(con_ev.root) + "\n"
+        con_str += str(con_ev) + "\n"
         self.con_results.setPlainText(con_str)
 
         ant_root = ant_ev.root
         con_root = con_ev.root
-        ants = []
-        cons = []
-
-        def FNDBranches(ar):
-            ars = []
-            if(ar == None):
-                return []
-            elif(ar.symbol.code == "OP_OR" and ar.sign):
-                if(ar.left.symbol.code == "OP_OR" and ar.left.sign):
-                    ars = ars + FNDBranches(ar.left)
-                else:
-                    ars.append(ar.left)
-                if(ar.right.symbol.code == "OP_OR" and ar.right.sign):
-                    ars = ars + FNDBranches(ar.right)
-                else:
-                    ars.append(ar.right)
-            return ars
-
-        def FNCBranches(ar):
-            ars = []
-            if(ar == None):
-                pass
-            elif(ar.symbol.code == "OP_AND" and ar.sign):
-                if(ar.left.symbol.code == "OP_AND" and ar.left.sign):
-                    ars = ars + FNCBranches(ar.left)
-                else:
-                    ars.append(ar.left)
-                if(ar.right.symbol.code == "OP_AND" and ar.right.sign):
-                    ars = ars + FNCBranches(ar.right)
-                else:
-                    ars.append(ar.right)
-            return ars
-
-        def ConsequentBranches(ar):
-            ars = []
-            if(ar == None):
-                pass
-            elif(ar.symbol.code == "OP_OR" and ar.sign):
-                if(ar.left.symbol.code == "OP_OR" and ar.sign):
-                    ars = ars + ConsequentBranches(ar.left)
-                else:
-                    ars.append(ar.left)
-                if(ar.right.symbol.code == "OP_OR" and ar.sign):
-                    ars = ars + ConsequentBranches(ar.right)
-                else:
-                    ars.append(ar.right)
-            return ars
-
-        ants = FNDBranches(ant_root)
-        cons = FNCBranches(con_root)
-        sep_cons = []
-        for c in FNCBranches(con_root):
-            print(c)
-            sep_cons += ConsequentBranches(c)
-
-        if(ants == []):
-            ants.append(ant_root)
-        if(cons == []):
-            cons.append(con_root)
+        ants = ant_ev.Branch()
+        cons = con_ev.Branch()
 
         print(ants, ant_root)
         print(cons, con_root)
-        print(sep_cons)
 
-        st_str = ""
-        for ant in ants:
-            for con in cons:
-                if(con.symbol.code == "OP_OR"):
-                    st_str += ant_ev.ConvertToString(ant) + "^ " 
-                    st_str += con_ev.ConvertToString(con.right) + "-> " 
-                    st_str += con_ev.ConvertToString(con.left) + "\n"
-                    st_str += ant_ev.ConvertToString(ant) + "^ " 
-                    st_str += con_ev.ConvertToString(con.left) + "-> " 
-                    st_str += con_ev.ConvertToString(con.right) + "\n"
-                else:
-                    st_str += ant_ev.ConvertToString(ant) + "-> " 
-                    st_str += con_ev.ConvertToString(con) + "\n"
-        self.statements.setPlainText(st_str)
+        rules = []
+        for a in ants:
+            for c in cons:
+                rules += Rule.TranslateToRules(a, c)
+        rstr = ""
 
+        mem = WorkMemory("rules.json")
+        for r in rules:
+            rstr += str(r) + "\n"
+            print(r)
+            print(repr(r))
+            mem.AddRule(r)
+        mem.Save()
+        self.statements.setPlainText(rstr)
