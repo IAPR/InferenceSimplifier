@@ -4,6 +4,12 @@ class Antecedent(Statement):
     def __init__(self, st):
         super(Antecedent, self).__init__(st)
 
+    def __str__(self):
+        return super(Antecedent, self).__str__()
+
+    def __repr__(self):
+        return super().__repr__()
+
     @staticmethod
     def fromLeaf(leaf):
         new_leaf, new_tree = leaf.DuplicateTree()
@@ -15,7 +21,6 @@ class Antecedent(Statement):
     def SimplifyFND(self):
         # Simplify tree
         # Order: <-> >> -> >> v >> ^
-        print("Simplifying tree:", self.ConvertToString(self.root))
         has_changed = True
         while(has_changed):
             has_changed = False
@@ -23,19 +28,14 @@ class Antecedent(Statement):
                 if( leaf == None ):
                     raise Exception
                 elif( self.MaterialEquivalence(leaf) ):
-                    print("MatE:", self.ConvertToString(self.root))
                     has_changed = True
                 elif( self.MaterialImplication(leaf) ):
-                    print("MatI:", self.ConvertToString(self.root))
                     has_changed = True
                 elif( self.DeMorganAND(leaf) ):
-                    print("MAND:", self.ConvertToString(self.root))
                     has_changed = True
                 elif( self.DeMorganOR(leaf) ):
-                    print("MoOR:", self.ConvertToString(self.root))
                     has_changed = True
                 elif( self.DistribAND(leaf) ):
-                    print("DAND:", self.ConvertToString(self.root))
                     has_changed = True
                     self.SimplifyToMinimum()
 

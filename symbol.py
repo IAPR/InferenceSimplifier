@@ -25,7 +25,7 @@ class Symbol:
             self.code = "IDENTIFIER"
 
     def __repr__(self):
-        return self.mask
+        return "({0}|{1}|{2})".format(self.code, self.mask, id(self) % 1000)
 
     def __str__(self):
-        return self.__repr__()
+        return self.mask

@@ -15,19 +15,25 @@ class InferenceSolver(QWidget):
 
         self.inst_lbl = QLabel("Escribe una sentencia antecedente->consecuente")
         self.mid_lbl = QLabel("->")
+        self.id_lbl = QLabel("Id:")
+        self.val_lbl = QLabel("Value:")
 
         self.antecedents = QLineEdit()
         self.consequents = QLineEdit()
+        self.variable = QLineEdit()
+
+        self.values = QComboBox()
+        self.values.addItem("T")
+        self.values.addItem("F")
 
         self.refresh_button = QPushButton("Evaluate!")
+        self.propagate_button = QPushButton("Propagate!")
 
-        self.ant_results = QPlainTextEdit()
-        self.con_results = QPlainTextEdit()
         self.statements = QPlainTextEdit()
+        self.rules = QPlainTextEdit()
 
-        self.ant_results.setReadOnly(True)
-        self.con_results.setReadOnly(True)
         self.statements.setReadOnly(True)
+        self.rules.setReadOnly(True)
 
         self.hlayout = QHBoxLayout()
         self.hlayout.addWidget(self.antecedents)
@@ -35,14 +41,22 @@ class InferenceSolver(QWidget):
         self.hlayout.addWidget(self.consequents)
         self.hlayout.addWidget(self.refresh_button)
 
+        self.hlayout2 = QHBoxLayout()
+        self.hlayout2.addWidget(self.id_lbl)
+        self.hlayout2.addWidget(self.variable)
+        self.hlayout2.addWidget(self.val_lbl)
+        self.hlayout2.addWidget(self.values)
+        self.hlayout2.addWidget(self.propagate_button)
+
         self.main_layout = QGridLayout()
         self.main_layout.addWidget(self.inst_lbl, 0, 0)
         self.main_layout.addLayout(self.hlayout, 1, 0)
-        self.main_layout.addWidget(self.ant_results, 2, 0)
-        self.main_layout.addWidget(self.con_results, 3, 0)
-        self.main_layout.addWidget(self.statements, 4, 0)
+        self.main_layout.addWidget(self.statements, 2, 0)
+        self.main_layout.addLayout(self.hlayout2, 3, 0)
+        self.main_layout.addWidget(self.rules, 4, 0)
 
         self.refresh_button.clicked.connect(self.Evaluate)
+        self.propagate_button.clicked.connect(self.Propagation)
 
         # TEST 1
         self.antecedents.setText("(!(a <-> b) -> (c <-> d))")
@@ -67,7 +81,6 @@ class InferenceSolver(QWidget):
         ant_ev.SimplifyFND()
         ant_str += "Simplified: \n"
         ant_str += str(ant_ev) + "\n"
-        self.ant_results.setPlainText(ant_str)
 
         con_str = "Consequents:\n"
         con_ev = Consequent(con_statement)
@@ -75,7 +88,6 @@ class InferenceSolver(QWidget):
         con_ev.SimplifyFNC()
         con_str += "Simplified: \n"
         con_str += str(con_ev) + "\n"
-        self.con_results.setPlainText(con_str)
 
         ant_root = ant_ev.root
         con_root = con_ev.root
@@ -91,11 +103,16 @@ class InferenceSolver(QWidget):
                 rules += Rule.TranslateToRules(a, c)
         rstr = ""
 
-        mem = WorkMemory("rules.json")
+        self.memory = WorkMemory("rules.json")
         for r in rules:
             rstr += str(r) + "\n"
             print(r)
             print(repr(r))
-            mem.AddRule(r)
-        mem.Save()
+            self.memory.AddRule(r)
+        self.memory.Save()
         self.statements.setPlainText(rstr)
+
+    def Propagation(self):
+        var = self.variable.text().strip()
+        value = self.values.currentText().strip()
+        self.memory.Propagate(var, value)

@@ -14,7 +14,6 @@ class Statement:
             return
         if(statement == ""):
             raise ValueError
-        print("Statement:", statement)
         i = 0
         while(i < len(statement)):
             psym = statement[i]
@@ -38,7 +37,7 @@ class Statement:
                 continue
 
             new_symbol = Symbol(psym)
-            #print(new_symbol.code, new_symbol.mask)
+            print("SYMBOL", repr(new_symbol))
             self.AppendSymbol(new_symbol)
             self.tree = list(set(self.tree))
             i += 1
@@ -47,7 +46,7 @@ class Statement:
         self.FindRealRoot()
 
     def __str__(self):
-        return self.ConvertToString(self.root)
+        return self.root.GetTreeString()
 
     def __repr__(self):
         return self.GetTreeInfo()
@@ -147,6 +146,10 @@ class Statement:
                 r.upper = u
                 self.tree.pop( self.tree.index(leaf) )
 
+    def PropagateInTree(self, variable, value):
+        leaf.root.ReplaceInTree(variable, value)
+        self.SimplifyToMinimum()
+
     def GetTreeInfo(self):
         prnt_str = ""
         for root in self.tree:
@@ -159,65 +162,41 @@ class Statement:
             prnt_str += "\n"
         return prnt_str
 
-    def ConvertToString(self, leaf, level = 0):
-        if(leaf == None):
-            raise Exception
-
-        ret_str = ""
-        # Print left side
-        if(leaf.left != None):
-            if(leaf.left.symbol.code != "IDENTIFIER"):
-                if(not leaf.left.sign):
-                    ret_str += Symbol.symbol_table["NEGATION"]
-                ret_str += Symbol.symbol_table["PAR_BEGIN"] + " "
-            ret_str += self.ConvertToString(leaf.left, level + 1)
-            if(leaf.left.symbol.code != "IDENTIFIER"):
-                ret_str += Symbol.symbol_table["PAR_END"] + " "
-        # Print leaf content
-        if(not leaf.sign and leaf.symbol.code == "IDENTIFIER"):
-            ret_str += Symbol.symbol_table["NEGATION"]
-        ret_str += str(leaf) + " "
-        # Print right side
-        if(leaf.right != None):
-            if(leaf.right.symbol.code != "IDENTIFIER"):
-                if(not leaf.right.sign):
-                    ret_str += Symbol.symbol_table["NEGATION"]
-                ret_str += Symbol.symbol_table["PAR_BEGIN"] + " "
-            ret_str += self.ConvertToString(leaf.right, level + 1)
-            if(leaf.right.symbol.code != "IDENTIFIER"):
-                ret_str += Symbol.symbol_table["PAR_END"] + " "
-        # Problem solving for level 0
-        if(level == 0 and not leaf.sign and leaf.symbol.code != "IDENTIFIER"):
-            ret_str = "!( " + ret_str + " )"
-        return ret_str
-
 ###############################################################################
 ##################   Simplification steps #####################################
 ###############################################################################
 
     def SimplifyToMinimum(self):
-        hc = True
-        while(hc):
-            for l in self.tree:
-                hc = False
-                if( self.ChangeOREquals(l) ):
-                    print("CORE:", self.ConvertToString(self.root))
-                    hc = True
-                elif( self.ChangeANDEquals(l) ):
-                    print("CAND:", self.ConvertToString(self.root))
-                    hc = True
-                elif( self.TrueOnOR(l) ):
-                    print("ToOR:", self.ConvertToString(self.root))
-                    hc = True
-                elif( self.FalseOnOR(l) ):
-                    print("FoOR:", self.ConvertToString(self.root))
-                    hc = True
-                elif( self.TrueOnAND(l) ):
-                    print("TAND:", self.ConvertToString(self.root))
-                    hc = True
-                elif( self.FalseOnAND(l) ):
-                    print("FAND:", self.ConvertToString(self.root))
-                    hc = True
+        try:
+            hc = True
+            while(hc):
+                for l in self.tree:
+                    hc = False
+                    if( self.GetSign(l) ):
+                        print("GS", self)
+                        hc = True
+                    if( self.ChangeOREquals(l) ):
+                        print("CO", self)
+                        hc = True
+                    elif( self.ChangeANDEquals(l) ):
+                        print("CA", self)
+                        hc = True
+                    elif( self.TrueOnOR(l) ):
+                        print("FA", self)
+                        hc = True
+                    elif( self.FalseOnOR(l) ):
+                        print("FO", self)
+                        hc = True
+                    elif( self.TrueOnAND(l) ):
+                        print("TA", self)
+                        hc = True
+                    elif( self.FalseOnAND(l) ):
+                        print("FA", self)
+                        hc = True
+        except AttributeError:
+            print("ERROR TREE:")
+            print(self.__repr__())
+            raise AttributeError
 
 
     # p <-> q -> (p -> q)^(q -> p)
@@ -265,6 +244,15 @@ class Statement:
             leaf.right.sign = not leaf.right.sign
             return True
         return False
+
+    def GetSign(self,leaf):
+        if(not leaf.sign):
+            if(leaf.symbol.mask == "T"):
+                leaf.symbol = Symbol("F")
+                leaf.sign = True
+            elif(leaf.symbol.mask == "F"):
+                leaf.symbol = Symbol("T")
+                leaf.sign = True
 
     def ChangeANDEquals(self, leaf):
         has_changed = False
@@ -348,14 +336,19 @@ class Statement:
                 dlt = leaf.right
             if(has_changed):
                 u = leaf.upper
-                if(id(u.left) == id(leaf)):
-                    u.left = sym
-                elif(id(u.right) == id(leaf)):
-                    u.right = sym
+                if(u != None):
+                    if(id(u.left) == id(leaf)):
+                        u.left = sym
+                    elif(id(u.right) == id(leaf)):
+                        u.right = sym
+                else:
+                    self.root = sym
                 sym.upper = u
                 sym.sign = not (sym.sign ^ leaf.sign)
                 self.tree.pop(self.tree.index(leaf))
                 self.tree.pop(self.tree.index(dlt))
+                del(leaf)
+                del(dlt)
         return has_changed
 
     # (p^T) -> p
@@ -372,14 +365,19 @@ class Statement:
                 dlt = leaf.right
             if(has_changed):
                 u = leaf.upper
-                if(id(u.left) == id(leaf)):
-                    u.left = sym
-                elif(id(u.right) == id(leaf)):
-                    u.right = sym
+                if(u != None):
+                    if(id(u.left) == id(leaf)):
+                        u.left = sym
+                    elif(id(u.right) == id(leaf)):
+                        u.right = sym
+                else:
+                    self.root = sym
                 sym.upper = u
                 sym.sign = not (sym.sign ^ leaf.sign)
                 self.tree.pop(self.tree.index(leaf))
                 self.tree.pop(self.tree.index(dlt))
+                del(leaf)
+                del(dlt)
         return has_changed
 
     # (p^F) -> F

@@ -4,14 +4,18 @@ from consequent import Consequent
 class Rule:
     def __init__(self, ant_str, con_str):
         self.antecedent = Antecedent(ant_str)
+        print("ANTECEDENT:", str(self.antecedent))
         self.consequent = Consequent(con_str)
+        print("CONSEQUENT:", str(self.consequent))
 
     def __str__(self):
         return str(self.antecedent) + " -> " + str(self.consequent)
 
     def __repr__(self):
-        s =  "ANTECEDENT" + str(self.antecedent.tree) + "\n"
-        s += "CONSEQUENT" + str(self.consequent.tree) + "\n"
+        s =  "ANTECEDENT" + str(self.antecedent) + "\n\t"
+        s += str(self.antecedent.tree) + "\n"
+        s += "CONSEQUENT" + str(self.consequent) + "\n\t" 
+        s += str(self.consequent.tree) + "\n"
         return s
 
     def __eq__(self, other):

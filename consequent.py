@@ -15,7 +15,6 @@ class Consequent(Statement):
     def SimplifyFNC(self):
         # Simplify tree
         # Order: <-> >> -> >> v >> ^
-        print("Simplifying tree:", self.ConvertToString(self.root))
         has_changed = True
         while(has_changed):
             has_changed = False
@@ -23,19 +22,14 @@ class Consequent(Statement):
                 if( leaf == None ):
                     raise Exception
                 elif( self.MaterialEquivalence(leaf) ):
-                    print("MatE:", self.ConvertToString(self.root))
                     has_changed = True
                 elif( self.MaterialImplication(leaf) ):
-                    print("MatI:", self.ConvertToString(self.root))
                     has_changed = True
                 elif( self.DeMorganAND(leaf) ):
-                    print("MAND:", self.ConvertToString(self.root))
                     has_changed = True
                 elif( self.DeMorganOR(leaf) ):
-                    print("MoOR:", self.ConvertToString(self.root))
                     has_changed = True
                 elif( self.DistribOR(leaf) ):
-                    print("DiOR:", self.ConvertToString(self.root))
                     has_changed = True
                     self.SimplifyToMinimum()
 
