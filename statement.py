@@ -39,6 +39,9 @@ class Statement:
             new_symbol = Symbol(psym)
             print("SYMBOL", repr(new_symbol))
             self.AppendSymbol(new_symbol)
+            print(" TREE", repr(self.tree)) 
+            print("STACK", repr(self.par_stack)) 
+            print("NSIGN", self.next_sign, "\n")
             self.tree = list(set(self.tree))
             i += 1
 
@@ -65,7 +68,10 @@ class Statement:
 #  - A buffer to keep the symbol when it is going to get swapped
 #
     def AppendSymbol(self, symbol):
-        if(self.tree == []):
+        if(symbol.code == "NEGATION"):
+            self.next_sign = False
+
+        elif(self.tree == []):
             new_leaf = Leaf(symbol, self.next_sign)
             self.tree.append(new_leaf)
             self.par_stack.append(self.tree[0])
@@ -73,9 +79,11 @@ class Statement:
 
             if(symbol.code == "PAR_BEGIN"):
                 self.par_stack.append(self.tree[0])
+            elif(symbol.code != "PAR_END" and symbol.code != "PAR_BEGIN"):
+                self.next_sign = True
             return
 
-        if(symbol.code == "PAR_BEGIN"):
+        elif(symbol.code == "PAR_BEGIN"):
             new_leaf = Leaf(symbol, self.next_sign, upper=self.root)
             self.tree.append(new_leaf)
             self.root.right = self.tree[-1]
@@ -88,9 +96,6 @@ class Statement:
             if(self.root.symbol.code == "PAR_BEGIN" and self.root.upper != None):
                 self.root = self.root.upper
             print("OLDROOT:", repr(oldroot), "\tNEWROOT:", repr(self.root))
-
-        elif(symbol.code == "NEGATION"):
-            self.next_sign = False
 
         elif(symbol.code == "IDENTIFIER"):
             last_symbol = self.tree[-1].symbol

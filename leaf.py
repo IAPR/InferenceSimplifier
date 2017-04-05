@@ -10,7 +10,7 @@ class Leaf:
         self.sign = isNeg
 
     def __repr__(self):
-        ret_str = "[{1}][{2}]({0})".format( id(self) % 1000, self.symbol, self.sign )
+        ret_str = "[{1}][{2}]({0})(U{3})(L{4})(R{5})".format( id(self) % 1000, self.symbol, self.sign, id(self.upper) % 1000, id(self.left)%1000, id(self.right)%1000 )
         return ret_str
 
     def __str__(self):

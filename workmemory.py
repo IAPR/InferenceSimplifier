@@ -18,10 +18,10 @@ class WorkMemory:
         con_str = str(rule.consequent).strip()
         self.rules[con_str] = ant_str
 
-        print("New Rule")
-        print("ANT", ant_str)
+        print("NEW RULE DETECTED")
+        print("Antecedent string: ", ant_str)
         print(Antecedent(ant_str))
-        print("CON", con_str)
+        print("Consequent string: ", con_str)
         print(Consequent(con_str))
         input()
 
@@ -46,15 +46,16 @@ class WorkMemory:
 
         for con in self.rules.keys():
             ant = Antecedent(self.rules[con])
-            print("BEFORE", ant)
+            print("BEFORE PROPAGATION", ant)
             print(repr(ant))
             input("Press Enter")
             ant.root.ReplaceInTree(item, value)
-            print("AFTER", ant)
+            print("AFTER PROPAGATION", ant)
             print(repr(ant))
             input("Press Enter")
             self.rules[con] = str(ant)
             print(self.rules[con], "->", con)
+
         print("RULES")
         for con,ant in self.rules.items():
             print(ant, "->", con)

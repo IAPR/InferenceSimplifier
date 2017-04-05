@@ -49,6 +49,8 @@ class Consequent(Statement):
                     con_list.append(con.right)             
             return con_list
 
+        print("Branching consequent:", self)
+        print("Tree:", self.tree)
         # Get list of node that generate new consequents
         con_lst = FindBranches(self.root)
         # Generate that new consequents

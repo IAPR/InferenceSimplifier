@@ -31,6 +31,7 @@ class Rule:
 
     @staticmethod
     def TranslateToRules(antecedent, consequent):
+        print("None ID:", id(None) % 1000)
         separator = Antecedent( str(consequent) )
         sep_list = separator.Branch()
 
@@ -38,6 +39,9 @@ class Rule:
         for sep in sep_list:
             newcon = Consequent( str(sep) )
             con_list.append( newcon )
+        print("SEP_LIST:", sep_list)
+        print("CON_LIST:", con_list)
+        input()
 
         rule_list = []
         i = 0

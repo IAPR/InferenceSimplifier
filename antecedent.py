@@ -55,6 +55,8 @@ class Antecedent(Statement):
                     antl.append(ant.right)
             return antl
 
+        print("Branching antecedent:", self)
+        print("Tree:", self.tree)
         # Get list of nodes that can create a new antecedent
         ant_list = FindBranches(self.root)
         # Generate list if new antecedents

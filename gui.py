@@ -13,6 +13,8 @@ class InferenceSolver(QWidget):
     def __init__(self, parent=None):
         super(InferenceSolver, self).__init__(parent)
 
+        self.memory = WorkMemory("rules.json")
+
         self.inst_lbl = QLabel("Escribe una sentencia antecedente->consecuente")
         self.mid_lbl = QLabel("->")
         self.id_lbl = QLabel("Id:")
@@ -75,27 +77,19 @@ class InferenceSolver(QWidget):
         if(ant_statement == "" or con_statement == ""):
             raise Exception
 
-        ant_str = "Antecedents:\n"
         ant_ev = Antecedent(ant_statement)
-        ant_str += str(ant_ev) + "\n"
         ant_ev.SimplifyFND()
-        ant_str += "Simplified: \n"
-        ant_str += str(ant_ev) + "\n"
-
-        con_str = "Consequents:\n"
         con_ev = Consequent(con_statement)
-        con_str += str(con_ev) + "\n"
         con_ev.SimplifyFNC()
-        con_str += "Simplified: \n"
-        con_str += str(con_ev) + "\n"
 
-        ant_root = ant_ev.root
-        con_root = con_ev.root
+#        print("Antecedent:", ant_ev)
+#        print("Tree:", ant_ev.tree)
+#        print("Consequent:", con_ev)
+#        print("Tree:", con_ev.tree)
+#        return
+
         ants = ant_ev.Branch()
         cons = con_ev.Branch()
-
-        print(ants, ant_root)
-        print(cons, con_root)
 
         rules = []
         for a in ants:
@@ -103,9 +97,9 @@ class InferenceSolver(QWidget):
                 rules += Rule.TranslateToRules(a, c)
         rstr = ""
 
-        self.memory = WorkMemory("rules.json")
         for r in rules:
-            rstr += str(r) + "\n"
+            rnstr = str(r) + "\n" + repr(r) + "\n\n"
+            rstr += rnstr
             print(r)
             print(repr(r))
             self.memory.AddRule(r)
