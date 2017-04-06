@@ -53,9 +53,12 @@ class Consequent(Statement):
         print("Tree:", self.tree)
         # Get list of node that generate new consequents
         con_lst = FindBranches(self.root)
+        if(con_lst == []):
+            con_lst.append(self.root)
         # Generate that new consequents
         new_consequents = []
         for cn in con_lst:
             new_con = Consequent.fromLeaf(cn)
             new_consequents.append(new_con)
+        print("NEW CONS:", new_consequents)
         return new_consequents

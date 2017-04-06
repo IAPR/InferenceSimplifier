@@ -39,9 +39,6 @@ class Rule:
         for sep in sep_list:
             newcon = Consequent( str(sep) )
             con_list.append( newcon )
-        print("SEP_LIST:", sep_list)
-        print("CON_LIST:", con_list)
-        input()
 
         rule_list = []
         i = 0
@@ -54,4 +51,7 @@ class Rule:
             new_rule = Rule(ant_str, str(con_list[i]) )
             rule_list.append(new_rule)
             i += 1
+
+        print("SEP LIST:", sep_list)
+        print("RULE LIST:", rule_list)
         return rule_list

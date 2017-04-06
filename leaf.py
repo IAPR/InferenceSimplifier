@@ -66,7 +66,10 @@ class Leaf:
         return ret_str
 
     def ReplaceInTree(self, mask, value):
+        has_replaced = False
+        print("FOUND:", self.symbol, mask, value)
         if(self.symbol.mask == mask):
+            print("REPLACING:", self.symbol, mask, value)
             if(not self.sign):
                 if(value == "T"):
                     sym = Symbol("F")
@@ -76,9 +79,12 @@ class Leaf:
                     sym = Symbol(value)
             else:
                 sym = Symbol(value)
+            has_replaced = True
             self.symbol = sym
+            print("CHECK REP:", self.symbol, mask, value)
         if(self.left != None):
-            self.left.ReplaceInTree(mask, value)
+            has_replaced = has_replaced | self.left.ReplaceInTree(mask, value)
         if(self.right != None):
-            self.right.ReplaceInTree(mask, value)
-
+            has_replaced = has_replaced | self.right.ReplaceInTree(mask, value)
+        print("has replaced", has_replaced)
+        return has_replaced

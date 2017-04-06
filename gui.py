@@ -33,9 +33,11 @@ class InferenceSolver(QWidget):
 
         self.statements = QPlainTextEdit()
         self.rules = QPlainTextEdit()
+        self.solutions = QPlainTextEdit()
 
         self.statements.setReadOnly(True)
         self.rules.setReadOnly(True)
+        self.solutions = QPlainTextEdit()
 
         self.hlayout = QHBoxLayout()
         self.hlayout.addWidget(self.antecedents)
@@ -56,19 +58,26 @@ class InferenceSolver(QWidget):
         self.main_layout.addWidget(self.statements, 2, 0)
         self.main_layout.addLayout(self.hlayout2, 3, 0)
         self.main_layout.addWidget(self.rules, 4, 0)
+        self.main_layout.addWidget(self.solutions, 5, 0)
 
         self.refresh_button.clicked.connect(self.Evaluate)
         self.propagate_button.clicked.connect(self.Propagation)
 
+        self.memory.AddRule( Rule("a^b^c", "z") )
+        self.memory.AddRule( Rule("d^z^c", "x") )
+        self.memory.AddRule( Rule("d^c^b", "z") )
+        self.memory.AddRule( Rule("z^x", "y") )
+
         # TEST 1
-        self.antecedents.setText("(!(a <-> b) -> (c <-> d))")
-        self.consequents.setText("(e<->f)")
+        # self.antecedents.setText("(!(a <-> b) -> (c <-> d))")
+        # self.consequents.setText("(e<->f)")
         # TEST 2
         # self.antecedents.setText("(!(a <-> b) -> (c <-> d) )")
         # self.consequents.setText("e")
 
         self.setLayout(self.main_layout)
         self.setWindowTitle("My first expert system")
+        self.PrintWorkMemory()
 
     def Evaluate(self):
         ant_statement = self.antecedents.text().strip()
@@ -98,15 +107,24 @@ class InferenceSolver(QWidget):
         rstr = ""
 
         for r in rules:
-            rnstr = str(r) + "\n" + repr(r) + "\n\n"
-            rstr += rnstr
-            print(r)
-            print(repr(r))
             self.memory.AddRule(r)
         self.memory.Save()
-        self.statements.setPlainText(rstr)
+        self.PrintWorkMemory()
+
+    def PrintWorkMemory(self):
+        self.statements.setPlainText( str(self.memory) )
 
     def Propagation(self):
         var = self.variable.text().strip()
         value = self.values.currentText().strip()
         self.memory.Propagate(var, value)
+
+        solutions = self.memory.GetSolutions()
+        if(solutions != []):
+            rstr = ""
+            for sol in solutions:
+                rstr += sol + "\n"
+            self.rules.setPlainText( rstr )
+
+        self.rules.setPlainText( str(self.memory) )
+

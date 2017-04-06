@@ -59,6 +59,8 @@ class Antecedent(Statement):
         print("Tree:", self.tree)
         # Get list of nodes that can create a new antecedent
         ant_list = FindBranches(self.root)
+        if(ant_list == []):
+            ant_list.append(self.root)
         # Generate list if new antecedents
         new_antecedents = []
         for an in ant_list:

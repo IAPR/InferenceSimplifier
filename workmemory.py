@@ -8,22 +8,35 @@ import json
 
 class WorkMemory:
     def __init__(self, f_name):
+        # Rules:
+        #   - Identifier
+        #   - List of antecedents
         self.rules = {}
         self.file = f_name
-        if(os.path.exists(self.file)):
-            self.Load()
+#        if(os.path.exists(self.file)):
+#            self.Load()
+
+    def __str__(self):
+        rstr = ""
+        for con, ants in self.rules.items():
+            for ant in ants:
+                rstr += ant + " -> " + con + "\n"
+        return rstr
 
     def AddRule(self, rule):
         ant_str = str(rule.antecedent).strip()
         con_str = str(rule.consequent).strip()
-        self.rules[con_str] = ant_str
+        # Add antecedent to the list of the corresponding consequent
+        if(self.rules.get(con_str) == None):
+            self.rules[con_str] = [ant_str]
+        else:
+            self.rules[con_str].append(ant_str)
 
         print("NEW RULE DETECTED")
         print("Antecedent string: ", ant_str)
         print(Antecedent(ant_str))
         print("Consequent string: ", con_str)
         print(Consequent(con_str))
-        input()
 
     def Load(self):
         fp = open(self.file, "r")
@@ -36,6 +49,14 @@ class WorkMemory:
         fp.write(work_mem_s)
         fp.close()
 
+    def GetSolutions(self):
+        solutions = []
+        for con,ants in self.rules:
+            for ant in ants:
+                if(ant.strip() in ["F", "T"]):
+                    solutions.append( str(ant) + " -> " + str(con) )
+        return solutions
+
     def Propagate(self, item, value):
         if(item == ""):
             return
@@ -44,18 +65,18 @@ class WorkMemory:
         else:
             val = "F"
 
-        for con in self.rules.keys():
-            ant = Antecedent(self.rules[con])
-            print("BEFORE PROPAGATION", ant)
-            print(repr(ant))
-            input("Press Enter")
-            ant.root.ReplaceInTree(item, value)
-            print("AFTER PROPAGATION", ant)
-            print(repr(ant))
-            input("Press Enter")
-            self.rules[con] = str(ant)
-            print(self.rules[con], "->", con)
+        print("Rules before propagation")
+        print(self)
 
-        print("RULES")
-        for con,ant in self.rules.items():
-            print(ant, "->", con)
+        for con,ants in self.rules.items():
+            for ant_str in ants:
+                ant = Antecedent(ant_str)
+                changed = ant.root.ReplaceInTree(item, value)
+                ant.SimplifyToMinimum()
+                ants.pop( ants.index(ant_str) )
+                ants.append( str(ant) )
+                if(changed and str(ant).strip() in ["F", "T"]):
+                    self.Propagate(con, str(ant).strip() )
+
+        print("Rules after propagation")
+        print(self)

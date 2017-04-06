@@ -37,11 +37,11 @@ class Statement:
                 continue
 
             new_symbol = Symbol(psym)
-            print("SYMBOL", repr(new_symbol))
             self.AppendSymbol(new_symbol)
-            print(" TREE", repr(self.tree)) 
-            print("STACK", repr(self.par_stack)) 
-            print("NSIGN", self.next_sign, "\n")
+#            print("SYMBOL", repr(new_symbol))
+#            print(" TREE", repr(self.tree)) 
+#            print("STACK", repr(self.par_stack)) 
+#            print("NSIGN", self.next_sign, "\n")
             self.tree = list(set(self.tree))
             i += 1
 
@@ -95,7 +95,7 @@ class Statement:
             self.root = self.par_stack[-1]
             if(self.root.symbol.code == "PAR_BEGIN" and self.root.upper != None):
                 self.root = self.root.upper
-            print("OLDROOT:", repr(oldroot), "\tNEWROOT:", repr(self.root))
+#            print("OLDROOT:", repr(oldroot), "\tNEWROOT:", repr(self.root))
 
         elif(symbol.code == "IDENTIFIER"):
             last_symbol = self.tree[-1].symbol
@@ -180,7 +180,7 @@ class Statement:
                     if( self.GetSign(l) ):
                         print("GS", self)
                         hc = True
-                    if( self.ChangeOREquals(l) ):
+                    elif( self.ChangeOREquals(l) ):
                         print("CO", self)
                         hc = True
                     elif( self.ChangeANDEquals(l) ):
