@@ -19,6 +19,7 @@ class InferenceSolver(QWidget):
         self.mid_lbl = QLabel("->")
         self.id_lbl = QLabel("Id:")
         self.val_lbl = QLabel("Value:")
+        self.solv_lbl = QLabel("No se ha llegado a una solucion")
 
         self.antecedents = QLineEdit()
         self.consequents = QLineEdit()
@@ -58,7 +59,8 @@ class InferenceSolver(QWidget):
         self.main_layout.addWidget(self.statements, 2, 0)
         self.main_layout.addLayout(self.hlayout2, 3, 0)
         self.main_layout.addWidget(self.rules, 4, 0)
-        self.main_layout.addWidget(self.solutions, 5, 0)
+        self.main_layout.addWidget(self.solv_lbl, 5, 0)
+        self.main_layout.addWidget(self.solutions, 6, 0)
 
         self.refresh_button.clicked.connect(self.Evaluate)
         self.propagate_button.clicked.connect(self.Propagation)
@@ -67,6 +69,7 @@ class InferenceSolver(QWidget):
         self.memory.AddRule( Rule("d^z^c", "x") )
         self.memory.AddRule( Rule("d^c^b", "z") )
         self.memory.AddRule( Rule("z^x", "y") )
+
 
         # TEST 1
         # self.antecedents.setText("(!(a <-> b) -> (c <-> d))")
@@ -77,6 +80,7 @@ class InferenceSolver(QWidget):
 
         self.setLayout(self.main_layout)
         self.setWindowTitle("My first expert system")
+        self.UpdateCache()
         self.PrintWorkMemory()
 
     def Evaluate(self):
@@ -84,7 +88,7 @@ class InferenceSolver(QWidget):
         con_statement = self.consequents.text().strip()
 
         if(ant_statement == "" or con_statement == ""):
-            raise Exception
+            return
 
         ant_ev = Antecedent(ant_statement)
         ant_ev.SimplifyFND()
@@ -109,7 +113,12 @@ class InferenceSolver(QWidget):
         for r in rules:
             self.memory.AddRule(r)
         self.memory.Save()
+        self.UpdateCache()
         self.PrintWorkMemory()
+
+    def UpdateCache(self):
+        self.workmem = self.memory.copy()
+        self.rules.setPlainText( str(self.workmem) )
 
     def PrintWorkMemory(self):
         self.statements.setPlainText( str(self.memory) )
@@ -117,14 +126,16 @@ class InferenceSolver(QWidget):
     def Propagation(self):
         var = self.variable.text().strip()
         value = self.values.currentText().strip()
-        self.memory.Propagate(var, value)
+        self.workmem.Propagate(var, value)
 
-        solutions = self.memory.GetSolutions()
+        solutions = self.workmem.GetSolutions()
+        rstr = ""
         if(solutions != []):
-            rstr = ""
             for sol in solutions:
                 rstr += sol + "\n"
-            self.rules.setPlainText( rstr )
+            self.solv_lbl.setText("Se ha llegado a una conclusion")
+            self.solutions.setPlainText( rstr )
+        print("Solutions:\n", rstr)
 
-        self.rules.setPlainText( str(self.memory) )
+        self.rules.setPlainText( str(self.workmem) )
 

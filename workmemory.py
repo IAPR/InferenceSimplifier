@@ -3,6 +3,7 @@ from consequent import Consequent
 from statement import Statement
 from symbol import *
 
+from copy import deepcopy
 import os
 import json
 
@@ -22,6 +23,9 @@ class WorkMemory:
             for ant in ants:
                 rstr += ant + " -> " + con + "\n"
         return rstr
+
+    def copy(self):
+        return deepcopy(self)
 
     def AddRule(self, rule):
         ant_str = str(rule.antecedent).strip()
@@ -51,7 +55,7 @@ class WorkMemory:
 
     def GetSolutions(self):
         solutions = []
-        for con,ants in self.rules:
+        for con,ants in self.rules.items():
             for ant in ants:
                 if(ant.strip() in ["F", "T"]):
                     solutions.append( str(ant) + " -> " + str(con) )
@@ -69,6 +73,12 @@ class WorkMemory:
         print(self)
 
         for con,ants in self.rules.items():
+            # If a given value is given, everything is restarted
+#            if( str(con).strip() == item):
+#                ants.clear()
+#                ants.append(val)
+#                continue
+
             for ant_str in ants:
                 ant = Antecedent(ant_str)
                 changed = ant.root.ReplaceInTree(item, value)
