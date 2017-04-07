@@ -65,10 +65,6 @@ class InferenceSolver(QWidget):
         self.refresh_button.clicked.connect(self.Evaluate)
         self.propagate_button.clicked.connect(self.Propagation)
 
-        self.memory.AddRule( Rule("a^b^c", "z") )
-        self.memory.AddRule( Rule("d^z^c", "x") )
-        self.memory.AddRule( Rule("d^c^b", "z") )
-        self.memory.AddRule( Rule("z^x", "y") )
 
 
         # TEST 1
@@ -77,6 +73,13 @@ class InferenceSolver(QWidget):
         # TEST 2
         # self.antecedents.setText("(!(a <-> b) -> (c <-> d) )")
         # self.consequents.setText("e")
+        # TEST 3
+        self.memory.AddRule( Rule("a ^ b", "c") )
+        self.memory.AddRule( Rule("c ^ d", "!e") )
+        self.memory.AddRule( Rule("!e ^ !f", "j") )
+        self.memory.AddRule( Rule("!a ^ g", "h") )
+        self.memory.AddRule( Rule("h ^ !l", "k") )
+        self.memory.AddRule( Rule("x ^ y", "z") )
 
         self.setLayout(self.main_layout)
         self.setWindowTitle("My first expert system")
