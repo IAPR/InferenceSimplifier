@@ -1,6 +1,7 @@
-from symbol import Symbol
-from copy import deepcopy,copy
 from leaf import Leaf
+from symbol import Symbol
+
+from copy import deepcopy,copy
 
 class Statement:
     def __init__(self, statement):
@@ -170,6 +171,27 @@ class Statement:
 ###############################################################################
 ##################   Simplification steps #####################################
 ###############################################################################
+
+    def SimplifyFNC(self):
+        # Simplify tree
+        # Order: <-> >> -> >> v >> ^
+        has_changed = True
+        while(has_changed):
+            has_changed = False
+            for leaf in self.tree:
+                if( leaf == None ):
+                    raise Exception
+                elif( self.MaterialEquivalence(leaf) ):
+                    has_changed = True
+                elif( self.MaterialImplication(leaf) ):
+                    has_changed = True
+                elif( self.DeMorganAND(leaf) ):
+                    has_changed = True
+                elif( self.DeMorganOR(leaf) ):
+                    has_changed = True
+                elif( self.DistribOR(leaf) ):
+                    has_changed = True
+                    self.SimplifyToMinimum()
 
     def SimplifyToMinimum(self):
         try:

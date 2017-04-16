@@ -1,8 +1,8 @@
 from PyQt5.QtCore import *
 from PyQt5.QtWidgets import *
-from antecedent import Antecedent
-from consequent import Consequent
-from rule import Rule
+
+from rules import Rules
+from statement import Statement
 from workmemory import WorkMemory
 
 # Two labels
@@ -10,20 +10,20 @@ from workmemory import WorkMemory
 # One button
 # One multi-line text box (read-only)
 class InferenceSolver(QWidget):
+    """Graphic interface of the project"""
     def __init__(self, parent=None):
         super(InferenceSolver, self).__init__(parent)
 
-        self.memory = WorkMemory("rules.json")
+        self.memRules = Rules("rulelist.json")
+        self.variables = WorkMemory()
 
         self.inst_lbl = QLabel("Escribe una sentencia antecedente->consecuente")
-        self.mid_lbl = QLabel("->")
         self.id_lbl = QLabel("Id:")
         self.val_lbl = QLabel("Value:")
         self.solv_lbl = QLabel("No se ha llegado a una solucion")
 
-        self.antecedents = QLineEdit()
-        self.consequents = QLineEdit()
-        self.variable = QLineEdit()
+        self.st_edit = QLineEdit()
+        self.var_edit = QLineEdit()
 
         self.values = QComboBox()
         self.values.addItem("T")
@@ -41,14 +41,12 @@ class InferenceSolver(QWidget):
         self.solutions = QPlainTextEdit()
 
         self.hlayout = QHBoxLayout()
-        self.hlayout.addWidget(self.antecedents)
-        self.hlayout.addWidget(self.mid_lbl)
-        self.hlayout.addWidget(self.consequents)
+        self.hlayout.addWidget(self.st_edit)
         self.hlayout.addWidget(self.refresh_button)
 
         self.hlayout2 = QHBoxLayout()
         self.hlayout2.addWidget(self.id_lbl)
-        self.hlayout2.addWidget(self.variable)
+        self.hlayout2.addWidget(self.var_edit)
         self.hlayout2.addWidget(self.val_lbl)
         self.hlayout2.addWidget(self.values)
         self.hlayout2.addWidget(self.propagate_button)
@@ -65,18 +63,7 @@ class InferenceSolver(QWidget):
         self.refresh_button.clicked.connect(self.Evaluate)
         self.propagate_button.clicked.connect(self.Propagation)
 
-        self.memory.AddRule( Rule("a^b^c", "z") )
-        self.memory.AddRule( Rule("d^z^c", "x") )
-        self.memory.AddRule( Rule("d^c^b", "z") )
-        self.memory.AddRule( Rule("z^x", "y") )
-
-
-        # TEST 1
-        # self.antecedents.setText("(!(a <-> b) -> (c <-> d))")
-        # self.consequents.setText("(e<->f)")
-        # TEST 2
-        # self.antecedents.setText("(!(a <-> b) -> (c <-> d) )")
-        # self.consequents.setText("e")
+        self.st_edit.setText("a ^ b ^ c -> d")
 
         self.setLayout(self.main_layout)
         self.setWindowTitle("My first expert system")
@@ -84,46 +71,32 @@ class InferenceSolver(QWidget):
         self.PrintWorkMemory()
 
     def Evaluate(self):
-        ant_statement = self.antecedents.text().strip()
-        con_statement = self.consequents.text().strip()
+        """Evaluates the statement and adds it to the rules"""
+        statement = self.st_edit.text().strip()
 
-        if(ant_statement == "" or con_statement == ""):
+        if(statement == ""):
             return
 
-        ant_ev = Antecedent(ant_statement)
-        ant_ev.SimplifyFND()
-        con_ev = Consequent(con_statement)
-        con_ev.SimplifyFNC()
+        new_st = Statement(statement)
+        new_st.SimplifyFNC()
 
-#        print("Antecedent:", ant_ev)
-#        print("Tree:", ant_ev.tree)
-#        print("Consequent:", con_ev)
-#        print("Tree:", con_ev.tree)
-#        return
+        print("New Statement:", new_st)
 
-        ants = ant_ev.Branch()
-        cons = con_ev.Branch()
-
-        rules = []
-        for a in ants:
-            for c in cons:
-                rules += Rule.TranslateToRules(a, c)
-        rstr = ""
-
-        for r in rules:
-            self.memory.AddRule(r)
-        self.memory.Save()
+        self.memRules.CreateRule(new_st)
+        self.memRules.Save()
         self.UpdateCache()
         self.PrintWorkMemory()
 
     def UpdateCache(self):
-        self.workmem = self.memory.copy()
-        self.rules.setPlainText( str(self.workmem) )
+        """Updates the rule buffer. Also displays all rules found until now"""
+        self.ruleHeap = self.memRules.copy()
+        self.rules.setPlainText( str(self.ruleHeap) )
 
     def PrintWorkMemory(self):
-        self.statements.setPlainText( str(self.memory) )
+        self.statements.setPlainText( str(self.memRules) )
 
     def Propagation(self):
+        pass
         var = self.variable.text().strip()
         value = self.values.currentText().strip()
         self.workmem.Propagate(var, value)

@@ -1,92 +1,55 @@
-from antecedent import Antecedent
-from consequent import Consequent
 from statement import Statement
 from symbol import *
 
 from copy import deepcopy
-import os
-import json
 
 class WorkMemory:
-    def __init__(self, f_name):
+    """Maintains rules for the inference engine in memory"""
+    def __init__(self):
         # Rules:
         #   - Identifier
-        #   - List of antecedents
+        #   - Value
         self.rules = {}
-        self.file = f_name
-#        if(os.path.exists(self.file)):
-#            self.Load()
 
     def __str__(self):
         rstr = ""
-        for con, ants in self.rules.items():
-            for ant in ants:
-                rstr += ant + " -> " + con + "\n"
+        for rule,val in self.rules.items():
+            rstr += str(rule) + " = " + str(val) + "\n"
         return rstr
 
     def copy(self):
+        """Makes a full copy of the rule"""
         return deepcopy(self)
 
-    def AddRule(self, rule):
-        ant_str = str(rule.antecedent).strip()
-        con_str = str(rule.consequent).strip()
-        # Add antecedent to the list of the corresponding consequent
-        if(self.rules.get(con_str) == None):
-            self.rules[con_str] = [ant_str]
+    def RuleExists(self, st_str):
+        """Checks if a rule already exists"""
+        if( self.rules.get(st_str) is None):
+            return False
         else:
-            self.rules[con_str].append(ant_str)
+            return True
 
-        print("NEW RULE DETECTED")
-        print("Antecedent string: ", ant_str)
-        print(Antecedent(ant_str))
-        print("Consequent string: ", con_str)
-        print(Consequent(con_str))
+    def AddRule(self, statement, value):
+        """Adds a rule of identifier=value"""
+        st_str = str(statement)
 
-    def Load(self):
-        fp = open(self.file, "r")
-        work_mem_s = fp.read()
-        self.__dict__ = json.loads(work_mem_s)
+        # Fail if rule already exists
+        if(self.RuleExists(st_str)):
+            raise ValueError
 
-    def Save(self):
-        work_mem_s = json.dumps(self.__dict__)
-        fp = open(self.file, "w")
-        fp.write(work_mem_s)
-        fp.close()
+        self.rules[st_str] = value
 
-    def GetSolutions(self):
-        solutions = []
-        for con,ants in self.rules.items():
-            for ant in ants:
-                if(ant.strip() in ["F", "T"]):
-                    solutions.append( str(ant) + " -> " + str(con) )
-        return solutions
+        print("NEW RULE ADDED")
+        print(statement, "=", value)
 
-    def Propagate(self, item, value):
-        if(item == ""):
-            return
-        if(value):
-            val = "T"
-        else:
-            val = "F"
+    def ModifyRule(self, statement, value):
+        """Modifies an existing rule"""
+        st_str = str(statement)
 
-        print("Rules before propagation")
-        print(self)
+        # Fail if rule already exists
+        if(not self.RuleExists(st_str)):
+            raise ValueError
 
-        for con,ants in self.rules.items():
-            # If a given value is given, everything is restarted
-#            if( str(con).strip() == item):
-#                ants.clear()
-#                ants.append(val)
-#                continue
+        self.rules[st_str] = value
 
-            for ant_str in ants:
-                ant = Antecedent(ant_str)
-                changed = ant.root.ReplaceInTree(item, value)
-                ant.SimplifyToMinimum()
-                ants.pop( ants.index(ant_str) )
-                ants.append( str(ant) )
-                if(changed and str(ant).strip() in ["F", "T"]):
-                    self.Propagate(con, str(ant).strip() )
-
-        print("Rules after propagation")
-        print(self)
+        print("RULE MODIFIED")
+        print(statement, "=", value)
