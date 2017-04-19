@@ -152,8 +152,13 @@ class Statement:
                 r.upper = u
                 self.tree.pop( self.tree.index(leaf) )
 
-    def PropagateInTree(self, variable, value):
-        leaf.root.ReplaceInTree(variable, value)
+    def ReplaceWithValue(self, variable, value):
+        print("======= Full Tree =================")
+        for leaf in self.tree:
+            print(repr(leaf), leaf.GetTreeString())
+        print("======= Started Replacement =======")
+        self.root.ReplaceInTree(variable, value)
+        print("======= Finished Replacement ======")
         self.SimplifyToMinimum()
 
     def GetTreeInfo(self):

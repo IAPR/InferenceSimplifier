@@ -11,6 +11,12 @@ from workmemory import WorkMemory
 # One multi-line text box (read-only)
 class InferenceSolver(QWidget):
     """Graphic interface of the project"""
+    #
+    #   memRules: Ruleset to be saved to file. This is not for propagation
+    #   variables: The work memory. It stores the values of the different 
+    #       variables that had a value assigned to them.
+    #   ruleHeap: Full copy of memRules in order to be used for propagation
+    #   
     def __init__(self, parent=None):
         super(InferenceSolver, self).__init__(parent)
 
@@ -96,19 +102,8 @@ class InferenceSolver(QWidget):
         self.statements.setPlainText( str(self.memRules) )
 
     def Propagation(self):
-        pass
-        var = self.variable.text().strip()
+        var = self.var_edit.text().strip()
         value = self.values.currentText().strip()
-        self.workmem.Propagate(var, value)
-
-        solutions = self.workmem.GetSolutions()
-        rstr = ""
-        if(solutions != []):
-            for sol in solutions:
-                rstr += sol + "\n"
-            self.solv_lbl.setText("Se ha llegado a una conclusion")
-            self.solutions.setPlainText( rstr )
-        print("Solutions:\n", rstr)
-
-        self.rules.setPlainText( str(self.workmem) )
+        self.ruleHeap.Propagate(var, value)
+        self.rules.setPlainText( str(self.ruleHeap) )
 

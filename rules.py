@@ -57,6 +57,10 @@ class Rules:
         fp.close()
 
     def GetSolutions(self):
+        """Check for a ruleset that became a solution through Modus Tollens"""
+        #
+        # A rule is a solution if there is only one variable left in the rule
+        #
         solutions = []
         for con,ants in self.rules.items():
             for ant in ants:
@@ -65,31 +69,20 @@ class Rules:
         return solutions
 
     def Propagate(self, item, value):
+        """Replaces a variable with a specific value, either T or F"""
         if(item == ""):
             return
-        if(value):
-            val = "T"
-        else:
-            val = "F"
+        # Only valid values are our True of False (T,F)
+        value = value.strip()
+        if(value not in ["T", "F"]):
+            raise ValueError
 
         print("Rules before propagation")
         print(self)
 
-        for con,ants in self.rules.items():
-            # If a given value is given, everything is restarted
-#            if( str(con).strip() == item):
-#                ants.clear()
-#                ants.append(val)
-#                continue
-
-            for ant_str in ants:
-                ant = Antecedent(ant_str)
-                changed = ant.root.ReplaceInTree(item, value)
-                ant.SimplifyToMinimum()
-                ants.pop( ants.index(ant_str) )
-                ants.append( str(ant) )
-                if(changed and str(ant).strip() in ["F", "T"]):
-                    self.Propagate(con, str(ant).strip() )
+        for rule in self.rules:
+            rule_st = Statement(rule)
+            rule_st.ReplaceWithValue(item,value)
 
         print("Rules after propagation")
         print(self)
