@@ -39,15 +39,16 @@ class Statement:
 
             new_symbol = Symbol(psym)
             self.AppendSymbol(new_symbol)
-#            print("SYMBOL", repr(new_symbol))
-#            print(" TREE", repr(self.tree)) 
-#            print("STACK", repr(self.par_stack)) 
-#            print("NSIGN", self.next_sign, "\n")
+            print("SYMBOL", repr(new_symbol))
+            print(" TREE", repr(self.tree)) 
+            print("STACK", repr(self.par_stack)) 
+            print("NSIGN", self.next_sign, "\n")
             self.tree = list(set(self.tree))
             i += 1
 
         self.NormalizeTree()
         self.FindRealRoot()
+        print("New Statement Created:", self.__str__())
 
     def __str__(self):
         return self.root.GetTreeString()
@@ -99,12 +100,8 @@ class Statement:
 #            print("OLDROOT:", repr(oldroot), "\tNEWROOT:", repr(self.root))
 
         elif(symbol.code == "IDENTIFIER"):
-            last_symbol = self.tree[-1].symbol
-            if(last_symbol.code == "PAR_BEGIN"):
-                new_leaf = Leaf(symbol, True, upper=self.root)
-            else:
-                new_leaf = Leaf(symbol, self.next_sign, upper=self.root)
-                self.next_sign = True
+            new_leaf = Leaf(symbol, self.next_sign, upper=self.root)
+            self.next_sign = True
             self.tree.append(new_leaf)
             self.root.right = self.tree[-1]
 
@@ -159,6 +156,7 @@ class Statement:
         print("======= Started Replacement =======")
         self.root.ReplaceInTree(variable, value)
         print("======= Finished Replacement ======")
+        print("New Tree:", self.__str__())
         self.SimplifyToMinimum()
 
     def GetTreeInfo(self):

@@ -71,16 +71,17 @@ class Leaf:
         print("FOUND:", self.symbol, mask, value)
         if(self.symbol.mask == mask):
             print("REPLACING:", self.symbol, mask, value, self.sign)
-            if(not self.sign):
-                print("Sign is False")
-                if(value == "T"):
-                    sym = Symbol("F")
-                elif(value == "F"):
-                    sym = Symbol("T")
+            if(value not in ["T", "F"]):
+                sym = Symbol(value)
+            else:
+                if(not self.sign):
+                    if(value == "T"):
+                        sym = Symbol("F")
+                    elif(value == "F"):
+                        sym = Symbol("T")
+                    self.sign = True
                 else:
                     sym = Symbol(value)
-            else:
-                sym = Symbol(value)
             has_replaced = True
             self.symbol = sym
             print("CHECK REP:", self.symbol, mask, value)

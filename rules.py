@@ -4,6 +4,7 @@ from symbol import *
 from copy import deepcopy
 import os
 import json
+import re
 
 class Rules:
     """Contains a list of CNF statements that will later be used"""
@@ -61,11 +62,12 @@ class Rules:
         #
         # A rule is a solution if there is only one variable left in the rule
         #
+        regex = "^[\w]+$"
         solutions = []
-        for con,ants in self.rules.items():
-            for ant in ants:
-                if(ant.strip() in ["F", "T"]):
-                    solutions.append( str(ant) + " -> " + str(con) )
+        for rule in self.rules:
+            rule_st = Statement(rule)
+            if(rule_st.root.symbol.code == "IDENTIFIER"):
+                solutions.append(rule)
         return solutions
 
     def Propagate(self, item, value):
@@ -80,9 +82,15 @@ class Rules:
         print("Rules before propagation")
         print(self)
 
-        for rule in self.rules:
-            rule_st = Statement(rule)
+        i = 0
+        while(i < len(self.rules)):
+            rule_st = Statement(self.rules[i])
             rule_st.ReplaceWithValue(item,value)
+            self.rules[i] = str(rule_st)
+            i += 1;
 
         print("Rules after propagation")
         print(self)
+        print("Solutions")
+        for sol in self.GetSolutions():
+            print(sol)
