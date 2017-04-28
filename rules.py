@@ -8,7 +8,7 @@ import re
 
 class Rules:
     """Contains a list of CNF statements that will later be used"""
-    def __init__(self, f_name):
+    def __init__(self, f_name=""):
         self.rules = []
         self.file = f_name
         if(os.path.exists(self.file)):
@@ -94,3 +94,48 @@ class Rules:
         print("Solutions")
         for sol in self.GetSolutions():
             print(sol)
+
+    def GetIdentifiers(self):
+        id_regex = "\w+"
+        ids = []
+        for rule in self.rules:
+            id_lst = re.findall(id_regex, rule)
+            for iD in id_lst:
+                if("v" not in iD):
+                    ids.append(iD)
+        ids = list(set(ids))
+        return ids
+
+    def GetRelatedRules(self, identifier):
+        id_queue = [identifier]
+        id_cons = []
+        id_ants = []
+        rules_lst = []
+
+        while(len(id_queue) > 0):
+            has_related_rules = False
+            qid = id_queue[0]
+            # Check in which rules the id appears
+            for rule in self.rules:
+                # If found in rule, add it to the list
+                if(qid in rule and rule not in rules_lst):
+                    rules_lst.append(rule)
+                    has_related_rules = True
+            if(has_related_rules):
+                id_cons.append(qid)
+            else:
+                id_ants.append(qid)
+            # Eliminate id from queue
+            id_queue.pop(0)
+            # Get all the new Identifiers from the new rules
+            tmp = Rules()
+            for rule in rules_lst:
+                tmp.CreateRule(rule)
+            new_id_list = tmp.GetIdentifiers()
+            for nid in new_id_list:
+                if(nid not in id_cons and nid not in id_ants):
+                    id_queue.append(nid)
+
+        id_cons = list(set(id_cons))
+        id_ants = list(set(id_ants))
+        return {"CONS": id_cons, "ANTS": id_ants, "RULES": rules_lst }
