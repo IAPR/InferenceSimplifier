@@ -10,6 +10,7 @@ class Statement:
         self.next_sign = True
         self.root = None
 
+        print("BEGIN PARSING STATEMENT:", statement)
         # Creating empty tree
         if(statement is None):
             return
@@ -46,9 +47,9 @@ class Statement:
             self.tree = list(set(self.tree))
             i += 1
 
-        self.NormalizeTree()
+        #self.NormalizeTree()
         self.FindRealRoot()
-        print("New Statement Created:", self.__str__())
+        print("END PARSING STATEMENT:", self.__str__())
 
     def __str__(self):
         return self.root.GetTreeString()

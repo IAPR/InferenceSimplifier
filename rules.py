@@ -70,6 +70,15 @@ class Rules:
                 solutions.append(rule)
         return solutions
 
+    def IsSolved(self):
+        solutions = self.GetSolutions()
+        if( len(solutions) == len(self.rules) ):
+            print("SOLUTIONS", solutions)
+            print("RULES====", self.rules) 
+            return True
+        else:
+            return False
+
     def Propagate(self, item, value):
         """Replaces a variable with a specific value, either T or F"""
         if(item == ""):
@@ -91,9 +100,6 @@ class Rules:
 
         print("Rules after propagation")
         print(self)
-        print("Solutions")
-        for sol in self.GetSolutions():
-            print(sol)
 
     def GetIdentifiers(self):
         id_regex = "\w+"
@@ -122,9 +128,11 @@ class Rules:
                     rules_lst.append(rule)
                     has_related_rules = True
             if(has_related_rules):
-                id_cons.append(qid)
+                if(qid not in id_cons):
+                    id_cons.append(qid)
             else:
-                id_ants.append(qid)
+                if(qid not in id_ants):
+                    id_ants.append(qid)
             # Eliminate id from queue
             id_queue.pop(0)
             # Get all the new Identifiers from the new rules
@@ -136,6 +144,4 @@ class Rules:
                 if(nid not in id_cons and nid not in id_ants):
                     id_queue.append(nid)
 
-        id_cons = list(set(id_cons))
-        id_ants = list(set(id_ants))
         return {"CONS": id_cons, "ANTS": id_ants, "RULES": rules_lst }

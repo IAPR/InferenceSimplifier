@@ -25,25 +25,36 @@ class ObjectiveWidget(QWidget):
         self.quest_layout = QHBoxLayout()
         self.quest_layout.addWidget(self.lbl)
         self.quest_layout.addWidget(self.id_cmb)
+        self.quest_layout.addWidget(self.accept_btn)
 
         self.main_layout = QVBoxLayout()
         self.main_layout.addLayout(self.quest_layout)
-        self.main_layout.addWidget(self.accept_btn)
 
         self.setLayout(self.main_layout)
         self.setWindowTitle("Objective Reasoning")
 
     def SelectObjective(self):
         self.objective = self.id_cmb.currentText().strip()
-        print("RELTATED:\n\t", self.memRules.GetRelatedRules(self.objective))
         direct = QuestionWidget(self.objective, self)
+        self.main_layout.addWidget(direct)
 
 class QuestionWidget(QWidget):
     """Widget for creating and answering the questions that are needed in the reasoning"""
     def __init__(self, objective, parent = None):
         super(QuestionWidget, self).__init__(parent)
-        self.memRules = Rules("rulelist.json")
         self.objective = objective
+        self.memRules = Rules("rulelist.json")
+
+        # Get consequents, antecedents and list of rules pertaining the objective
+        related = self.memRules.GetRelatedRules(self.objective)
+        self.cons = related["CONS"]
+        self.ants = related["ANTS"]
+        self.ruleHeap = Rules()
+        for rule in related["RULES"]:
+            self.ruleHeap.CreateRule(rule)
+
+        # Value log will be a workmemory object
+        self.valueLog = WorkMemory()
         
         self.lbl = QLabel('Especifique el valor de "<ID>":')
         
@@ -72,9 +83,54 @@ class QuestionWidget(QWidget):
         self.main_layout.addLayout(self.hlayout1)
         self.main_layout.addLayout(self.hlayout2)
 
+        self.UpdateValueLog()
+        self.UpdateRuleHeap()
+        self.SetNextQuestion()
+
         self.setLayout(self.main_layout)
         self.setWindowTitle("Objective Reasoning - Questioning")
         self.show()
+
+    def SetNextQuestion(self):
+        idList = self.memRules.GetIdentifiers()
+
+        self.question = ""
+        while(self.question not in idList):
+            self.question = self.ants.pop()
+
+        self.lbl.setText('Especifique el valor de "{0}":'.format(self.question))
+        self.UpdateValueLog()
+        self.UpdateRuleHeap()
         
     def Replace(self):
-        print("RELTATED:\n\t", self.memRules.GetRelatedRules(self.objective))
+        # Get the rule
+        value = self.value_edit.currentText().strip()
+        # Add it to the logs
+        self.valueLog.AddRule(self.question, value)
+        # Propagate rule
+        self.ruleHeap.Propagate(self.question, value)
+        # If solutions are found, add them to logs and propagate them
+        solutions = self.ruleHeap.GetSolutions()
+        for sol in solutions:
+            sol_st = Statement(sol)
+            if(sol_st.root.sign):
+                val = "T"
+            else:
+                val = "F"
+            self.valueLog.AddRule(sol_st.root.symbol.mask, val)
+            self.ruleHeap.Propagate(sol_st.root.symbol.mask, val)
+
+        if(self.ruleHeap.IsSolved()):
+            self.UpdateValueLog()
+            self.UpdateRuleHeap()
+            message = QMessageBox()
+            message.setText("Problem has been solved")
+            message.exec()
+        else:
+            self.SetNextQuestion()
+
+    def UpdateValueLog(self):
+        self.value_logs.setPlainText( str(self.valueLog) + "\n\nCONS: " + str(self.cons) + "\n\nANTS: " + str(self.ants)  )
+
+    def UpdateRuleHeap(self):
+        self.rules_heap.setPlainText( str(self.ruleHeap) )
