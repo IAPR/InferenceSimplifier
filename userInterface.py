@@ -49,6 +49,15 @@ class QuestionWidget(QWidget):
         related = self.memRules.GetRelatedRules(self.objective)
         self.cons = related["CONS"]
         self.ants = related["ANTS"]
+
+        # Generate question list
+        self.question_list = []
+        for con in self.cons[1:]:
+            self.question_list.append(con)
+        for ant in self.ants:
+            self.question_list.append(ant)
+        self.question = ""
+
         self.ruleHeap = Rules()
         for rule in related["RULES"]:
             self.ruleHeap.CreateRule(rule)
@@ -96,7 +105,7 @@ class QuestionWidget(QWidget):
 
         self.question = ""
         while(self.question not in idList):
-            self.question = self.ants.pop()
+            self.question = self.question_list.pop()
 
         self.lbl.setText('Especifique el valor de "{0}":'.format(self.question))
         self.UpdateValueLog()
@@ -117,8 +126,9 @@ class QuestionWidget(QWidget):
                 val = "T"
             else:
                 val = "F"
-            self.valueLog.AddRule(sol_st.root.symbol.mask, val)
-            self.ruleHeap.Propagate(sol_st.root.symbol.mask, val)
+            if(sol_st.root.symbol.mask not in ["T", "F"]):
+                self.valueLog.AddRule(sol_st.root.symbol.mask, val)
+                self.ruleHeap.Propagate(sol_st.root.symbol.mask, val)
 
         if(self.ruleHeap.IsSolved()):
             self.UpdateValueLog()
@@ -127,10 +137,21 @@ class QuestionWidget(QWidget):
             message.setText("Problem has been solved")
             message.exec()
         else:
-            self.SetNextQuestion()
+            try:
+                self.SetNextQuestion()
+            except:
+                self.UpdateValueLog()
+                self.UpdateRuleHeap()
+                message = QMessageBox()
+                message.setText("I couldn't find a solution for this problem")
+                message.exec()
 
     def UpdateValueLog(self):
-        self.value_logs.setPlainText( str(self.valueLog) + "\n\nCONS: " + str(self.cons) + "\n\nANTS: " + str(self.ants)  )
+        self.value_logs.setPlainText( str(self.valueLog) + 
+                "\n\nCONS: " + str(self.cons) + 
+                "\n\nANTS: " + str(self.ants) +
+                "\n\nQUESTIONS: " + str(self.question_list) +
+                "\n\nQUESTION: " + str(self.question) )
 
     def UpdateRuleHeap(self):
         self.rules_heap.setPlainText( str(self.ruleHeap) )

@@ -109,8 +109,8 @@ class Statement:
                 root = self.root_stack[-1]
                 newLeaf = Leaf(symbol, self.id_next_sign, root, None, None)
                 self.tree.append(newLeaf)
+                root.right = newLeaf
                 if(self.par_open > 0):
-                    root.right = newLeaf
                     self.root_stack.append(newLeaf)
             self.id_next_sign = True
 
@@ -124,6 +124,7 @@ class Statement:
                 newLeaf = Leaf(symbol, self.op_next_sign, root.upper, root, None)
                 root.upper = newLeaf
                 self.tree.append(newLeaf)
+                self.root_stack.pop()
                 self.root_stack.append(newLeaf)
 
 

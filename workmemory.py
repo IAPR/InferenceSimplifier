@@ -34,6 +34,7 @@ class WorkMemory:
 
         # Fail if rule already exists
         if(self.RuleExists(st_str)):
+            print("Rule {0} already exists, with value {1}".format(statement, value))
             raise ValueError
 
         self.rules[st_str] = value

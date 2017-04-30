@@ -65,7 +65,7 @@ class DeveloperInterface(QWidget):
         self.refresh_button.clicked.connect(self.Evaluate)
         self.propagate_button.clicked.connect(self.Propagation)
 
-        self.st_edit.setText("a ^ b ^ c -> d")
+        self.st_edit.setText("((a ^ b) ^ c) -> d")
 
         self.setLayout(self.main_layout)
         self.setWindowTitle("My first expert system")

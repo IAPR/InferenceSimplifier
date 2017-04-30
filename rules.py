@@ -66,8 +66,9 @@ class Rules:
         solutions = []
         for rule in self.rules:
             rule_st = Statement(rule)
-            if(rule_st.root.symbol.code == "IDENTIFIER"):
-                solutions.append(rule)
+            if(rule_st.root.symbol.code == "IDENTIFIER"): 
+                if(rule_st.root.symbol.mask not in ["T", "F"]):
+                    solutions.append(rule)
         return solutions
 
     def IsSolved(self):
