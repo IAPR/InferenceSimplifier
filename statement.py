@@ -1,14 +1,16 @@
 from leaf import Leaf
 from symbol import Symbol
+from exceptions import ParserSyntaxError
 
 from copy import deepcopy,copy
 
 class Statement:
     def __init__(self, statement):
         self.tree = []
-        self.par_stack = []
-        self.next_sign = True
-        self.root = None
+        self.root_stack = []
+        self.id_next_sign = True
+        self.op_next_sign = True
+        self.par_open = 0
 
         print("BEGIN PARSING STATEMENT:", statement)
         # Creating empty tree
@@ -41,14 +43,17 @@ class Statement:
             new_symbol = Symbol(psym)
             self.AppendSymbol(new_symbol)
             print("SYMBOL", repr(new_symbol))
-            print(" TREE", repr(self.tree)) 
-            print("STACK", repr(self.par_stack)) 
-            print("NSIGN", self.next_sign, "\n")
-            self.tree = list(set(self.tree))
+            print("__TREE", self.tree) 
+            print("STACK_", self.root_stack)
+            print("PAOPEN", self.par_open)
+            print("IDSIGN", self.id_next_sign)
+            print("OPSIGN", self.op_next_sign, "\n\n")
+
             i += 1
 
         #self.NormalizeTree()
         self.FindRealRoot()
+        print("ORIGINAL STATEMENT:", statement)
         print("END PARSING STATEMENT:", self.__str__())
 
     def __str__(self):
@@ -71,55 +76,57 @@ class Statement:
 #  - A buffer to keep the symbol when it is going to get swapped
 #
     def AppendSymbol(self, symbol):
+
         if(symbol.code == "NEGATION"):
-            self.next_sign = False
+            if(not self.id_next_sign):
+                raise ParserSyntaxError
 
-        elif(self.tree == []):
-            new_leaf = Leaf(symbol, self.next_sign)
-            self.tree.append(new_leaf)
-            self.par_stack.append(self.tree[0])
-            self.root = self.tree[0]
-
-            if(symbol.code == "PAR_BEGIN"):
-                self.par_stack.append(self.tree[0])
-            elif(symbol.code != "PAR_END" and symbol.code != "PAR_BEGIN"):
-                self.next_sign = True
-            return
+            self.id_next_sign = False
 
         elif(symbol.code == "PAR_BEGIN"):
-            new_leaf = Leaf(symbol, self.next_sign, upper=self.root)
-            self.tree.append(new_leaf)
-            self.root.right = self.tree[-1]
-            self.par_stack.append(self.tree[-1])
-            self.root = self.tree[-1]
+            if(not self.op_next_sign):
+                raise ParserSyntaxError
+
+            self.par_open += 1
+            self.op_next_sign = self.id_next_sign
+            self.id_next_sign = True
 
         elif(symbol.code == "PAR_END"):
-            oldroot = self.par_stack.pop()
-            self.root = self.par_stack[-1]
-            if(self.root.symbol.code == "PAR_BEGIN" and self.root.upper != None):
-                self.root = self.root.upper
-#            print("OLDROOT:", repr(oldroot), "\tNEWROOT:", repr(self.root))
+            if(not self.id_next_sign or not self.op_next_sign):
+                raise ParserSyntaxError
+            elif( len(self.tree) == 0):
+                raise ParserSyntaxError
+            elif( len(self.root_stack) == 0):
+                raise ParserSyntaxError
+            self.root_stack.pop()
 
         elif(symbol.code == "IDENTIFIER"):
-            new_leaf = Leaf(symbol, self.next_sign, upper=self.root)
-            self.next_sign = True
-            self.tree.append(new_leaf)
-            self.root.right = self.tree[-1]
+            if(len(self.tree) == 0):
+                newLeaf = Leaf(symbol, self.id_next_sign, None, None, None)
+                self.tree.append(newLeaf)
+                self.root_stack.append(newLeaf)
+            else:
+                root = self.root_stack[-1]
+                newLeaf = Leaf(symbol, self.id_next_sign, root, None, None)
+                self.tree.append(newLeaf)
+                if(self.par_open > 0):
+                    root.right = newLeaf
+                    self.root_stack.append(newLeaf)
+            self.id_next_sign = True
 
         else:
-            new_leaf = Leaf(symbol, self.next_sign, upper=self.root.upper, left=self.root)
-            self.next_sign = True
-            self.tree.append(new_leaf)
+            if(len(self.tree) == 0 ):
+                newLeaf = Leaf(symbol, self.op_next_sign, None, None, None)
+                self.tree.append(newLeaf)
+                self.root_stack.append(newLeaf)
+            else:
+                root = self.root_stack[-1]
+                newLeaf = Leaf(symbol, self.op_next_sign, root.upper, root, None)
+                root.upper = newLeaf
+                self.tree.append(newLeaf)
+                self.root_stack.append(newLeaf)
 
-            up = self.root.upper
-            if(up is not None):
-                if(up.left is self.root):
-                    up.left = self.tree[-1]
-                else:
-                    up.right = self.tree[-1]
 
-            self.root.upper = self.tree[-1]
-            self.root = self.tree[-1]
 
     def FindRealRoot(self):
         roots = []
