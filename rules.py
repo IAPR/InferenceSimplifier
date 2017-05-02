@@ -41,9 +41,6 @@ class Rules:
 
         self.rules.append(st_str)
 
-        print("NEW RULE ADDED")
-        print(statement)
-
     def Load(self):
         """Loads from an existing file"""
         fp = open(self.file, "r")
@@ -72,13 +69,14 @@ class Rules:
         return solutions
 
     def IsSolved(self):
-        solutions = self.GetSolutions()
-        if( len(solutions) == len(self.rules) ):
-            print("SOLUTIONS", solutions)
-            print("RULES====", self.rules) 
-            return True
-        else:
-            return False
+        regex = "^[\w]+$"
+        undef = []
+        for rule in self.rules:
+            rule_st = Statement(rule)
+            if(rule_st.root.symbol.mask in ["T", "F"]):
+                undef.append(rule)
+        return len(undef) == len(self.rules)
+
 
     def Propagate(self, item, value):
         """Replaces a variable with a specific value, either T or F"""

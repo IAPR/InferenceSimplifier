@@ -44,6 +44,7 @@ class QuestionWidget(QWidget):
         super(QuestionWidget, self).__init__(parent)
         self.objective = objective
         self.memRules = Rules("rulelist.json")
+        self.reasoned = []
 
         # Get consequents, antecedents and list of rules pertaining the objective
         related = self.memRules.GetRelatedRules(self.objective)
@@ -101,11 +102,17 @@ class QuestionWidget(QWidget):
         self.show()
 
     def SetNextQuestion(self):
-        idList = self.memRules.GetIdentifiers()
+        idList = self.ruleHeap.GetIdentifiers()
 
         self.question = ""
         while(self.question not in idList):
             self.question = self.question_list.pop()
+            print("IDLIST", idList)
+            print("Selected {0} for question".format(self.question))
+            if(self.question not in idList):
+                msg = QMessageBox()
+                msg.setText("SKIP")
+                msg.exec()
 
         self.lbl.setText('Especifique el valor de "{0}":'.format(self.question))
         self.UpdateValueLog()
@@ -129,29 +136,53 @@ class QuestionWidget(QWidget):
             if(sol_st.root.symbol.mask not in ["T", "F"]):
                 self.valueLog.AddRule(sol_st.root.symbol.mask, val)
                 self.ruleHeap.Propagate(sol_st.root.symbol.mask, val)
+                self.reasoned.append(sol_st.root.symbol.mask)
 
+        self.UpdateValueLog()
+        self.UpdateRuleHeap()
         if(self.ruleHeap.IsSolved()):
-            self.UpdateValueLog()
-            self.UpdateRuleHeap()
-            message = QMessageBox()
-            message.setText("Problem has been solved")
-            message.exec()
+            # Enter finished state
+            if(self.valueLog.RuleExists(self.objective)):
+                self.Explain()
+            else:
+                self.Fail()
         else:
             try:
                 self.SetNextQuestion()
             except:
-                self.UpdateValueLog()
-                self.UpdateRuleHeap()
-                message = QMessageBox()
-                message.setText("I couldn't find a solution for this problem")
-                message.exec()
+                self.Fail()
 
     def UpdateValueLog(self):
         self.value_logs.setPlainText( str(self.valueLog) + 
                 "\n\nCONS: " + str(self.cons) + 
                 "\n\nANTS: " + str(self.ants) +
                 "\n\nQUESTIONS: " + str(self.question_list) +
-                "\n\nQUESTION: " + str(self.question) )
+                "\n\nQUESTION: " + str(self.question) + 
+                "\n\nOBJECTIVE: " + str(self.objective) )
 
     def UpdateRuleHeap(self):
         self.rules_heap.setPlainText( str(self.ruleHeap) )
+
+    def Finish(self):
+        self.id_cmb.setReadOnly(True)
+        self.replace_btn.setEnabled(False)
+
+
+    def Fail(self):
+        message = QMessageBox()
+        message.setText("I couldn't find a solution for this problem.Reasoning tree was exhausted before an answer was found")
+        message.exec()
+
+    def Explain(self):
+        explain_str = "Solution has been found: {0}\n".format(self.valueLog.GetRule(self.objective))
+        for re in self.reasoned:
+            past_lst = self.valueLog.GetPastKeys(re)
+            explain_str += "\n{0} is {1} because:\n".format(re, self.valueLog.GetRule(re))
+            for p in past_lst:
+                explain_str += "\t{0} = {1}\n".format(p, self.valueLog.GetRule(p))
+        msg = QMessageBox()
+        msg.setText(explain_str)
+        msg.exec()
+            
+
+

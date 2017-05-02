@@ -42,12 +42,12 @@ class Statement:
 
             new_symbol = Symbol(psym)
             self.AppendSymbol(new_symbol)
-            print("SYMBOL", repr(new_symbol))
-            print("__TREE", self.tree) 
-            print("STACK_", self.root_stack)
-            print("PAOPEN", self.par_open)
-            print("IDSIGN", self.id_next_sign)
-            print("OPSIGN", self.op_next_sign, "\n\n")
+            # print("SYMBOL", repr(new_symbol))
+            # print("__TREE", self.tree) 
+            # print("STACK_", self.root_stack)
+            # print("PAOPEN", self.par_open)
+            # print("IDSIGN", self.id_next_sign)
+            # print("OPSIGN", self.op_next_sign, "\n\n")
 
             i += 1
 
@@ -209,8 +209,8 @@ class Statement:
         try:
             hc = True
             while(hc):
+                hc = False
                 for l in self.tree:
-                    hc = False
                     if( self.GetSign(l) ):
                         print("GS", self)
                         hc = True

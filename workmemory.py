@@ -42,6 +42,27 @@ class WorkMemory:
         print("NEW RULE ADDED")
         print(statement, "=", value)
 
+    def GetRule(self, statement):
+        st_str = str(statement)
+
+        # Gets value of rule, else it fails
+        for rule in self.rules.keys():
+            if(rule == st_str):
+                return self.rules[rule]
+        return None
+
+    def GetPastKeys(self, statement):
+        """Finds all keys before the one searched"""
+        st_str = str(statement)
+        keys = []
+        for rule in self.rules.keys():
+            if(rule != st_str):
+                keys.append(rule)
+            else:
+                return keys
+        return None
+
+
     def ModifyRule(self, statement, value):
         """Modifies an existing rule"""
         st_str = str(statement)
