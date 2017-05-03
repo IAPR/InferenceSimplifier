@@ -45,13 +45,12 @@ class QuestionWidget(QWidget):
         self.memRules = WorkMemory("rulelist.json")
         self.reasoned = []
 
-        # Generate question list
-        self.question_list = self.memRules.ListAntecedents()
-        self.question = ""
+        # Create buffer of rules using forward chaining
+        self.ruleHeap = self.memRules.GetRelatedRules(self.objective)
 
-        # Create buffer of rules
-        self.ruleHeap = self.memRules.copy()
-        self.ruleHeap.file = ""
+        # Generate question list
+        self.question_list = self.ruleHeap.ListAntecedents()
+        self.question = ""
 
         # Value log will be a workmemory object
         self.valueLog = WorkMemory()

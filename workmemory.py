@@ -42,7 +42,7 @@ class WorkMemory:
 
     def ListConsequents(self):
         """Get a list of all consequents in the memory"""
-        return self.rules.keys()
+        return list(self.rules.keys())
 
     def ListAntecedents(self):
         """Get a list of all antecedents in memory"""
@@ -61,12 +61,12 @@ class WorkMemory:
         ids = list(set(ids))
         return ids 
 
+    def ListIdentifiers(self):
+        return self.ListConsequents() + self.ListAntecedents()
+
     def RuleExists(self, st_str):
         """Checks if a rule already exists"""
-        if( self.rules.get(st_str) is None):
-            return False
-        else:
-            return True
+        return self.rules.get(st_str) is not None
 
     def AddRule(self, statement, value):
         """Adds a rule of identifier->value, or consequent->antecedent"""
@@ -75,7 +75,7 @@ class WorkMemory:
 
         # Fail if rule already exists
         if(self.RuleExists(st_str)):
-            print("Rule {0} already xists, with value {1}".format(statement, val_str))
+            print("Rule {0} already xists, with value {1}".format(statement, self.GetRule(st_str)))
             raise ValueError
 
         self.rules[st_str] = val_str
@@ -164,3 +164,41 @@ class WorkMemory:
 
         print("Rules after propagation")
         print(self)
+
+
+    def GetRelatedRules(self, identifier):
+        id_queue = [identifier]
+        id_checked = []
+        rules_lst = {}
+
+        while(len(id_queue) > 0):
+            print("IDQUEUE", id_queue)
+            print("CHECKED", id_checked)
+            print("RULES", rules_lst)
+
+            qid = id_queue[0]
+            # Check in which rules the id appears
+            for con,ant in self.rules.items():
+                # If found in rule, add it to the dictionary
+                if(qid in ant or qid in con):
+                    rules_lst[con] = ant
+            # Eliminate id from queue
+            id_queue.pop(0)
+            id_checked.append(qid)
+            # Get all the new Identifiers from the new rules
+            tmp = WorkMemory()
+            for con,ant in rules_lst.items():
+                tmp.AddRule(con, ant)
+            new_id_list = tmp.ListIdentifiers()
+            # Queue all identifiers that has not been checked already
+            for nid in new_id_list:
+                if(nid not in id_checked):
+                    id_queue.append(nid)
+
+        # Generate a new workmemory object for storing the new rules
+        print("RULES:", rules_lst)
+        newMem = WorkMemory()
+        for con, ant in rules_lst.items():
+            newMem.AddRule(con, ant)
+        return newMem
+
