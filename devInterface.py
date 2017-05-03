@@ -13,7 +13,7 @@ class DeveloperInterface(QWidget):
     def __init__(self, parent=None):
         super(DeveloperInterface, self).__init__(parent)
 
-        self.memory = WorkMemory("rules.json")
+        self.memory = WorkMemory("rulelist.json")
 
         self.inst_lbl = QLabel("Escribe una sentencia antecedente->consecuente")
         self.mid_lbl = QLabel("->")

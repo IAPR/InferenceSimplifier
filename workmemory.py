@@ -4,6 +4,7 @@ from symbol import *
 from copy import deepcopy
 import os
 import json
+import re
 
 class WorkMemory:
     """Maintains rules for the inference engine in memory"""
@@ -38,6 +39,27 @@ class WorkMemory:
         fp = open(self.file, "w")
         fp.write(rules_s)
         fp.close()
+
+    def ListConsequents(self):
+        """Get a list of all consequents in the memory"""
+        return self.rules.keys()
+
+    def ListAntecedents(self):
+        """Get a list of all antecedents in memory"""
+        id_regex = "\w+"
+        ids = []
+        for con, ant in self.rules.items():
+            id_lst = re.findall(id_regex, ant)
+            for iD in id_lst:
+                if("v" in iD):
+                    continue    
+                elif("T" in iD):
+                    continue
+                elif("F" in iD):
+                    continue
+                ids.append(iD)
+        ids = list(set(ids))
+        return ids 
 
     def RuleExists(self, st_str):
         """Checks if a rule already exists"""
@@ -111,7 +133,7 @@ class WorkMemory:
         for con,ants in self.rules.items():
             for ant in ants:
                 if(ant.strip() in ["F", "T"]):
-                    solutions.append( str(ant) + " -> " + str(con) )
+                    solutions.append( str(con) + "=" + str(ant) )
         return solutions
 
     def IsSolved(self):
@@ -130,21 +152,15 @@ class WorkMemory:
         print("Rules before propagation")
         print(self)
 
-        for con,ant in self.rules.items():
+        for con,ant_str in self.rules.items():
             # If propagation extends to a consequent, modify that rule
             if( str(con).strip() == item):
                 self.ModifyRule(con, value)
                 continue
 
-            ant = Antecedent(ant_str)
-            changed = ant.root.ReplaceInTree(item, value)
-
-        #i = 0
-        #while(i < len(self.rules)):
-        #    rule_st = Statement(self.rules[i])
-        #    rule_st.ReplaceWithValue(item,value)
-        #    self.rules[i] = str(rule_st)
-        #    i += 1;
+            ant = Statement(ant_str)
+            ant.ReplaceWithValue(item, value)
+            self.ModifyRule(con, str(ant) )
 
         print("Rules after propagation")
         print(self)

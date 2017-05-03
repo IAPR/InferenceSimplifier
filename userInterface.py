@@ -2,7 +2,6 @@ from PyQt5.QtCore import *
 from PyQt5.QtWidgets import *
 import sys
 
-from rules import Rules
 from statement import Statement
 from workmemory import WorkMemory
 
@@ -10,8 +9,8 @@ class ObjectiveWidget(QWidget):
     """Dialog/Widget for asking the objective of the reasoning"""
     def __init__(self, parent=None):
         super(ObjectiveWidget, self).__init__(parent)
-        self.memRules = Rules("rulelist.json")
-        self.id_lst = self.memRules.GetIdentifiers()
+        self.memRules = WorkMemory("rulelist.json")
+        self.id_lst = self.memRules.ListConsequents()
 
         self.lbl = QLabel("Specify your objective:")
 
@@ -31,7 +30,7 @@ class ObjectiveWidget(QWidget):
         self.main_layout.addLayout(self.quest_layout)
 
         self.setLayout(self.main_layout)
-        self.setWindowTitle("Objective Reasoning")
+        self.setWindowTitle("Backward Chaining Reasoning")
 
     def SelectObjective(self):
         self.objective = self.id_cmb.currentText().strip()
@@ -43,25 +42,16 @@ class QuestionWidget(QWidget):
     def __init__(self, objective, parent = None):
         super(QuestionWidget, self).__init__(parent)
         self.objective = objective
-        self.memRules = Rules("rulelist.json")
+        self.memRules = WorkMemory("rulelist.json")
         self.reasoned = []
 
-        # Get consequents, antecedents and list of rules pertaining the objective
-        related = self.memRules.GetRelatedRules(self.objective)
-        self.cons = related["CONS"]
-        self.ants = related["ANTS"]
-
         # Generate question list
-        self.question_list = []
-        for con in self.cons[1:]:
-            self.question_list.append(con)
-        for ant in self.ants:
-            self.question_list.append(ant)
+        self.question_list = self.memRules.ListAntecedents()
         self.question = ""
 
-        self.ruleHeap = Rules()
-        for rule in related["RULES"]:
-            self.ruleHeap.CreateRule(rule)
+        # Create buffer of rules
+        self.ruleHeap = self.memRules.copy()
+        self.ruleHeap.file = ""
 
         # Value log will be a workmemory object
         self.valueLog = WorkMemory()
@@ -102,7 +92,7 @@ class QuestionWidget(QWidget):
         self.show()
 
     def SetNextQuestion(self):
-        idList = self.ruleHeap.GetIdentifiers()
+        idList = self.ruleHeap.ListAntecedents()
 
         self.question = ""
         while(self.question not in idList):
@@ -128,19 +118,30 @@ class QuestionWidget(QWidget):
         # If solutions are found, add them to logs and propagate them
         solutions = self.ruleHeap.GetSolutions()
         for sol in solutions:
-            sol_st = Statement(sol)
-            if(sol_st.root.sign):
-                val = "T"
-            else:
-                val = "F"
-            if(sol_st.root.symbol.mask not in ["T", "F"]):
-                self.valueLog.AddRule(sol_st.root.symbol.mask, val)
-                self.ruleHeap.Propagate(sol_st.root.symbol.mask, val)
-                self.reasoned.append(sol_st.root.symbol.mask)
+            # Solution format "con=ant"
+            con,ant = sol.split("=")
+
+            # If rule has not been found before, propagate
+            if( (not self.valueLog.RuleExists(con)) ):
+                msg = QMessageBox()
+                msg.setText("Discovered new rule: " + str(con) + " = " + str(ant) )
+                msg.exec()
+
+                self.valueLog.AddRule(con, ant)
+                self.ruleHeap.Propagate(con, ant)
+                self.reasoned.append(con)
+            # If rule has already been found, check for inconsistencies
+            elif( not self.valueLog.GetRule(con) == ant):
+                msg = QMessageBox()
+                msg.setText("Inconsistency has been found: " + con + " was " + 
+                        self.valueLog.GetRule(con) + " but now it is " + ant)
+                msg.exec()
+
+
 
         self.UpdateValueLog()
         self.UpdateRuleHeap()
-        if(self.ruleHeap.IsSolved()):
+        if(self.ruleHeap.IsSolved() or self.valueLog.RuleExists(self.objective)):
             # Enter finished state
             if(self.valueLog.RuleExists(self.objective)):
                 self.Explain()
@@ -154,8 +155,6 @@ class QuestionWidget(QWidget):
 
     def UpdateValueLog(self):
         self.value_logs.setPlainText( str(self.valueLog) + 
-                "\n\nCONS: " + str(self.cons) + 
-                "\n\nANTS: " + str(self.ants) +
                 "\n\nQUESTIONS: " + str(self.question_list) +
                 "\n\nQUESTION: " + str(self.question) + 
                 "\n\nOBJECTIVE: " + str(self.objective) )
