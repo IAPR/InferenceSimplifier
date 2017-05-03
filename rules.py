@@ -41,6 +41,7 @@ class Rules:
 
         self.rules.append(st_str)
 
+
     def Load(self):
         """Loads from an existing file"""
         fp = open(self.file, "r")

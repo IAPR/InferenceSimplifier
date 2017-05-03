@@ -1,31 +1,29 @@
 from PyQt5.QtCore import *
 from PyQt5.QtWidgets import *
-
-from rules import Rules
-from statement import Statement
+from antecedent import Antecedent
+from consequent import Consequent
+from rule import Rule
 from workmemory import WorkMemory
 
+# Two labels
+# Two Textboxes
+# One button
+# One multi-line text box (read-only)
 class DeveloperInterface(QWidget):
-    """Graphic interface of the project (developer edition)"""
-    #
-    #   memRules: Ruleset to be saved to file. This is not for propagation
-    #   variables: The work memory. It stores the values of the different 
-    #       variables that had a value assigned to them.
-    #   ruleHeap: Full copy of memRules in order to be used for propagation
-    #   
     def __init__(self, parent=None):
         super(DeveloperInterface, self).__init__(parent)
 
-        self.memRules = Rules("rulelist.json")
-        self.variables = WorkMemory()
+        self.memory = WorkMemory("rules.json")
 
         self.inst_lbl = QLabel("Escribe una sentencia antecedente->consecuente")
+        self.mid_lbl = QLabel("->")
         self.id_lbl = QLabel("Id:")
         self.val_lbl = QLabel("Value:")
         self.solv_lbl = QLabel("No se ha llegado a una solucion")
 
-        self.st_edit = QLineEdit()
-        self.var_edit = QLineEdit()
+        self.antecedents = QLineEdit()
+        self.consequents = QLineEdit()
+        self.variable = QLineEdit()
 
         self.values = QComboBox()
         self.values.addItem("T")
@@ -43,12 +41,14 @@ class DeveloperInterface(QWidget):
         self.solutions = QPlainTextEdit()
 
         self.hlayout = QHBoxLayout()
-        self.hlayout.addWidget(self.st_edit)
+        self.hlayout.addWidget(self.antecedents)
+        self.hlayout.addWidget(self.mid_lbl)
+        self.hlayout.addWidget(self.consequents)
         self.hlayout.addWidget(self.refresh_button)
 
         self.hlayout2 = QHBoxLayout()
         self.hlayout2.addWidget(self.id_lbl)
-        self.hlayout2.addWidget(self.var_edit)
+        self.hlayout2.addWidget(self.variable)
         self.hlayout2.addWidget(self.val_lbl)
         self.hlayout2.addWidget(self.values)
         self.hlayout2.addWidget(self.propagate_button)
@@ -65,41 +65,66 @@ class DeveloperInterface(QWidget):
         self.refresh_button.clicked.connect(self.Evaluate)
         self.propagate_button.clicked.connect(self.Propagation)
 
-        self.st_edit.setText("((a ^ b) ^ c) -> d")
-
         self.setLayout(self.main_layout)
         self.setWindowTitle("My first expert system")
         self.UpdateCache()
         self.PrintWorkMemory()
 
     def Evaluate(self):
-        """Evaluates the statement and adds it to the rules"""
-        statement = self.st_edit.text().strip()
+        ant_statement = self.antecedents.text().strip()
+        con_statement = self.consequents.text().strip()
 
-        if(statement == ""):
+        if(ant_statement == "" or con_statement == ""):
             return
 
-        new_st = Statement(statement)
-        new_st.SimplifyFNC()
+        ant_ev = Antecedent(ant_statement)
+        ant_ev.SimplifyFND()
+        con_ev = Consequent(con_statement)
+        con_ev.SimplifyFNC()
 
-        print("New Statement:", new_st)
+        ants = ant_ev.Branch()
+        cons = con_ev.Branch()
 
-        self.memRules.CreateRule(new_st)
-        self.memRules.Save()
+        rules = []
+        for a in ants:
+            for c in cons:
+                rules += Rule.TranslateToRules(a, c)
+        rstr = ""
+
+        print("ANTBRANCHES:")
+        for ant in ants:
+            print("\t", ant)
+        print("CONBRANCHES:")
+        for con in cons:
+            print("\t", con)
+
+        for r in rules:
+            print("RULE:", r)
+            self.memory.AddRule(r.consequent, r.antecedent)
+        self.memory.Save()
         self.UpdateCache()
         self.PrintWorkMemory()
 
     def UpdateCache(self):
-        """Updates the rule buffer. Also displays all rules found until now"""
-        self.ruleHeap = self.memRules.copy()
-        self.rules.setPlainText( str(self.ruleHeap) )
+        self.workmem = self.memory.copy()
+        self.rules.setPlainText( str(self.workmem) )
 
     def PrintWorkMemory(self):
-        self.statements.setPlainText( str(self.memRules) )
+        self.statements.setPlainText( str(self.memory) )
 
     def Propagation(self):
-        var = self.var_edit.text().strip()
+        var = self.variable.text().strip()
         value = self.values.currentText().strip()
-        self.ruleHeap.Propagate(var, value)
-        self.rules.setPlainText( str(self.ruleHeap) )
+        self.workmem.Propagate(var, value)
+
+        solutions = self.workmem.GetSolutions()
+        rstr = ""
+        if(solutions != []):
+            for sol in solutions:
+                rstr += sol + "\n"
+            self.solv_lbl.setText("Se ha llegado a una conclusion")
+            self.solutions.setPlainText( rstr )
+        print("Solutions:\n", rstr)
+
+        self.rules.setPlainText( str(self.workmem) )
 
