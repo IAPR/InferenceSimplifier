@@ -1,1 +1,0 @@
-{"punc": " ( doubledot ^ dot )  ^ semicolon", "letter": " (  v owel )  ^ consonant", "character": "letter ^ punc", "sentence": "character ^ structure", "writing": "sentence ^ purpose", "poetry": "writing ^ emotion", "speech": " (  v oice )  ^ purpose", "chant": "speech ^ poetry"}
