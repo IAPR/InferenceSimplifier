@@ -42,6 +42,7 @@ class Statement:
 
             new_symbol = Symbol(psym)
             self.AppendSymbol(new_symbol)
+            # DEBUG
             # print("SYMBOL", repr(new_symbol))
             # print("__TREE", self.tree) 
             # print("STACK_", self.root_stack)
@@ -53,8 +54,9 @@ class Statement:
 
         #self.NormalizeTree()
         self.FindRealRoot()
-        print("ORIGINAL STATEMENT:", statement)
-        print("END PARSING STATEMENT:", self.__str__())
+        self.SimplifyToMinimum()
+        #print("ORIGINAL STATEMENT:", statement)
+        #print("END PARSING STATEMENT:", self.__str__())
 
     def __str__(self):
         return self.root.GetTreeString()
@@ -122,12 +124,18 @@ class Statement:
             else:
                 root = self.root_stack[-1]
                 newLeaf = Leaf(symbol, self.op_next_sign, root.upper, root, None)
+                # change root above root
+                uproot = root.upper
+                if(uproot is not None):
+                    if(uproot.left == root):
+                        uproot.left = newLeaf
+                    elif(uproot.right == root):
+                        uproot.right = newLeaf
+                # Change root
                 root.upper = newLeaf
                 self.tree.append(newLeaf)
                 self.root_stack.pop()
                 self.root_stack.append(newLeaf)
-
-
 
     def FindRealRoot(self):
         roots = []
@@ -140,24 +148,9 @@ class Statement:
             raise LookupError
 
     def NormalizeTree(self):
-        # Eliminate rogue PAR_BEGIN symbols on tree
-        for leaf in self.tree:
-            if(leaf.symbol.code == "PAR_BEGIN"):
-                # When there is par_begin, left will always be null
-                if(leaf.left is not None or leaf.right is None):
-                    raise Exception
-
-                u = leaf.upper
-                r = leaf.right
-                if(id(u.left) == id(leaf)):
-                    u.left = r
-                elif(id(u.right) == id(leaf)):
-                    u.right = r
-                else:
-                    raise Exception
-                r.upper = u
-                self.tree.pop( self.tree.index(leaf) )
-
+        new_st = Statement( str(self) )
+        self.tree = new_st.tree
+        
     def ReplaceWithValue(self, variable, value):
         print("======= Full Tree =================")
         for leaf in self.tree:
@@ -187,6 +180,8 @@ class Statement:
     def SimplifyFNC(self):
         # Simplify tree
         # Order: <-> >> -> >> v >> ^
+        self.SimplifyToMinimum()
+        print("Simplifying to a FNC Statement...")
         has_changed = True
         while(has_changed):
             has_changed = False
@@ -194,43 +189,95 @@ class Statement:
                 if( leaf == None ):
                     raise Exception
                 elif( self.MaterialEquivalence(leaf) ):
+                    print("MEQV:", self, "\n")
                     has_changed = True
                 elif( self.MaterialImplication(leaf) ):
+                    print("MIMP:", self, "\n")
                     has_changed = True
                 elif( self.DeMorganAND(leaf) ):
+                    print("MAND:", self, "\n")
                     has_changed = True
                 elif( self.DeMorganOR(leaf) ):
+                    print("DMOR:", self, "\n")
+                    has_changed = True
+                elif( self.SimpleDistribAND(leaf) ):
+                    print("SDAN:", self, "\n")
+                    has_changed = True
+                elif( self.SimpleDistribOR(leaf) ):
+                    print("SDOR:", self, "\n")
                     has_changed = True
                 elif( self.DistribOR(leaf) ):
+                    print("DIOR:", self, "\n")
+                    has_changed = True
+                    self.SimplifyToMinimum()
+            print("HAS CHANGED: ", has_changed)
+
+    def SimplifyFND(self):
+        # Simplify tree
+        # Order: <-> >> -> >> v >> ^
+        print("Simplifying to a FND Statement...")
+        has_changed = True
+        while(has_changed):
+            has_changed = False
+            for leaf in self.tree:
+                if( leaf == None ):
+                    raise Exception
+                elif( self.MaterialEquivalence(leaf) ):
+                    print("MEQV:", self, "\n")
+                    has_changed = True
+                elif( self.MaterialImplication(leaf) ):
+                    print("MIMP:", self, "\n")
+                    has_changed = True
+                elif( self.DeMorganAND(leaf) ):
+                    print("MAND:", self, "\n")
+                    has_changed = True
+                elif( self.DeMorganOR(leaf) ):
+                    print("DMOR:", self, "\n")
+                    has_changed = True
+                elif( self.SimpleDistribAND(leaf) ):
+                    print("SDAN:", self, "\n")
+                    has_changed = True
+                elif( self.SimpleDistribOR(leaf) ):
+                    print("SDOR:", self, "\n")
+                    has_changed = True
+                elif( self.DistribAND(leaf) ):
+                    print("DAND:", self, "\n")
                     has_changed = True
                     self.SimplifyToMinimum()
 
     def SimplifyToMinimum(self):
+        print("Simplifying to Minimum...")
         try:
             hc = True
             while(hc):
                 hc = False
                 for l in self.tree:
                     if( self.GetSign(l) ):
-                        print("GS", self)
+                        print("GS:", self, "\n")
                         hc = True
                     elif( self.ChangeOREquals(l) ):
-                        print("CO", self)
+                        print("CO:", self, "\n")
                         hc = True
                     elif( self.ChangeANDEquals(l) ):
-                        print("CA", self)
+                        print("CA:", self, "\n")
                         hc = True
                     elif( self.TrueOnOR(l) ):
-                        print("FA", self)
+                        print("FA:", self, "\n")
                         hc = True
                     elif( self.FalseOnOR(l) ):
-                        print("FO", self)
+                        print("FO:", self, "\n")
                         hc = True
                     elif( self.TrueOnAND(l) ):
-                        print("TA", self)
+                        print("TA:", self, "\n")
                         hc = True
                     elif( self.FalseOnAND(l) ):
-                        print("FA", self)
+                        print("FA:", self, "\n")
+                        hc = True
+                    elif( self.SimpleDistribAND(l) ):
+                        print("SA:", self, "\n")
+                        hc = True
+                    elif( self.SimpleDistribOR(l) ):
+                        print("SO:", self, "\n")
                         hc = True
         except AttributeError:
             print("ERROR TREE:")
@@ -491,12 +538,13 @@ class Statement:
             l = leaf.left
             r = leaf.right
             if(l.symbol.code == "OP_AND" and r.symbol.code == "OP_AND" ):
-                leaf.symbol = Symbol("^")
 
                 ll1 = l.left
                 lr1 = l.right
                 rl1 = r.left
                 rr1 = r.right
+                
+                leaf.symbol = Symbol("^")
 
                 ll2,llt = ll1.DuplicateTree()
                 self.tree += llt
@@ -537,3 +585,62 @@ class Statement:
                 return True
         return False
 
+    # (p v q) ^ r -> (p ^ r) v (q ^ r)
+    def SimpleDistribAND(self, leaf):
+        if(leaf.symbol.code == "OP_OR"):
+            l = leaf.left
+            r = leaf.right
+            if(l.symbol.code == "OP_AND" and r.symbol.code == "IDENTIFIER"):
+                op = l
+                ident = r
+            elif(r.symbol.code == "OP_AND" and l.symbol.code == "IDENTIFIER"):
+                op = r
+                ident = l
+            else:
+                return False
+
+            leaf.symbol = Symbol("^")
+            opL = op.left
+            opR = op.right
+            
+            ident2,identt = ident.DuplicateTree()
+            self.tree += identt
+
+            nl = Leaf( Symbol("v"), True, leaf, opL, ident)
+            self.tree.append(nl)
+            nr = Leaf( Symbol("v"), True, leaf, opR, ident2)
+            self.tree.append(nr)
+
+            leaf.left = nl
+            leaf.right = nr
+
+            return True
+
+    # (p v q) ^ r -> (p ^ r) v (q ^ r)
+    def SimpleDistribOR(self, leaf):
+        if(leaf.symbol.code == "OP_AND"):
+            l = leaf.left
+            r = leaf.right
+            if(l.symbol.code == "OP_OR" and r.symbol.code == "IDENTIFIER"):
+                op = l
+                ident = r
+            elif(r.symbol.code == "OP_OR" and l.symbol.code == "IDENTIFIER"):
+                op = r
+                ident = l
+            else:
+                return False
+
+            leaf.symbol = Symbol("v")
+            opL = op.left
+            opR = op.right
+            
+            ident2,identt = ident.DuplicateTree()
+            self.tree += identt
+
+            nl = Leaf( Symbol("^"), True, leaf, opL, ident)
+            nr = Leaf( Symbol("^"), True, leaf, opR, ident2)
+
+            leaf.left = nl
+            leaf.right = nr
+
+            return True

@@ -4,6 +4,7 @@ from PyQt5.QtWidgets import *
 from rules import Rules
 from statement import Statement
 from workmemory import WorkMemory
+from cnfStatement import CNFStatement
 
 class DeveloperInterface(QWidget):
     """Graphic interface of the project (developer edition)"""
@@ -79,12 +80,13 @@ class DeveloperInterface(QWidget):
         if(statement == ""):
             return
 
-        new_st = Statement(statement)
-        new_st.SimplifyFNC()
+        new_cnf = CNFStatement(statement)
+        cnf_list = new_cnf.Branch()
 
-        print("New Statement:", new_st)
+        for cnf in cnf_list:
+            print("New Statement:", cnf)
+            self.memRules.CreateRule(cnf)
 
-        self.memRules.CreateRule(new_st)
         self.memRules.Save()
         self.UpdateCache()
         self.PrintWorkMemory()
