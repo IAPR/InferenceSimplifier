@@ -3,6 +3,7 @@ from statement import Statement
 class Consequent(Statement):
     def __init__(self, st):
         super(Consequent, self).__init__(st)
+        self.SimplifyFNC()
 
     @staticmethod
     def fromLeaf(leaf):
@@ -11,27 +12,6 @@ class Consequent(Statement):
         con.tree = new_tree
         con.root = new_leaf
         return con
-
-    def SimplifyFNC(self):
-        # Simplify tree
-        # Order: <-> >> -> >> v >> ^
-        has_changed = True
-        while(has_changed):
-            has_changed = False
-            for leaf in self.tree:
-                if( leaf == None ):
-                    raise Exception
-                elif( self.MaterialEquivalence(leaf) ):
-                    has_changed = True
-                elif( self.MaterialImplication(leaf) ):
-                    has_changed = True
-                elif( self.DeMorganAND(leaf) ):
-                    has_changed = True
-                elif( self.DeMorganOR(leaf) ):
-                    has_changed = True
-                elif( self.DistribOR(leaf) ):
-                    has_changed = True
-                    self.SimplifyToMinimum()
 
     def Branch(self):
         def FindBranches(con):

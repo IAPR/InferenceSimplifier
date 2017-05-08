@@ -19,8 +19,9 @@ class WorkMemory:
 
     def __str__(self):
         rstr = ""
-        for rule,val in self.rules.items():
-            rstr += str(rule) + " = " + str(val) + "\n"
+        for rule,val_list in self.rules.items():
+            for val in val_list:
+                rstr += str(rule) + " = " + str(val) + "\n"
         return rstr
 
     def copy(self):
@@ -48,16 +49,15 @@ class WorkMemory:
         """Get a list of all antecedents in memory"""
         id_regex = "\w+"
         ids = []
-        for con, ant in self.rules.items():
-            id_lst = re.findall(id_regex, ant)
-            for iD in id_lst:
-                if("v" in iD):
-                    continue    
-                elif("T" in iD):
-                    continue
-                elif("F" in iD):
-                    continue
-                ids.append(iD)
+        for con, ant_lst in self.rules.items():
+            for ant in ant_lst:
+                id_lst = re.findall(id_regex, ant)
+                for iD in id_lst:
+                    if("v" in iD):
+                        continue    
+                    elif(iD in ["T", "F"]):
+                        continue
+                    ids.append(iD)
         ids = list(set(ids))
         return ids 
 
@@ -75,10 +75,9 @@ class WorkMemory:
 
         # Fail if rule already exists
         if(self.RuleExists(st_str)):
-            print("Rule {0} already xists, with value {1}".format(statement, val_str))
-            raise ValueError
-
-        self.rules[st_str] = val_str
+            self.rules[st_str].append(val_str)
+        else:
+            self.rules[st_str] = [val_str]
 
         print("NEW RULE ADDED")
         print(statement, "=", val_str)
@@ -93,7 +92,7 @@ class WorkMemory:
         else:
             raise IndexError
 
-    def GetRule(self, statement):
+    def GetRules(self, statement):
         st_str = str(statement)
 
         # Gets value of rule, else it fails
@@ -112,20 +111,6 @@ class WorkMemory:
             else:
                 return keys
         return None
-
-    def ModifyRule(self, statement, value):
-        """Modifies an existing rule"""
-        st_str = str(statement)
-        val_str = str(value)
-
-        # Fail if rule already exists
-        if(not self.RuleExists(st_str)):
-            raise ValueError
-
-        self.rules[st_str] = val_str
-
-        print("RULE MODIFIED")
-        print(statement, "=", val_str)
 
     def GetSolutions(self):
         """Check for a ruleset that became a solution through Modus Ponens"""
@@ -152,15 +137,24 @@ class WorkMemory:
         print("Rules before propagation")
         print(self)
 
-        for con,ant_str in self.rules.items():
+        for con,ant_lst in self.rules.items():
             # If propagation extends to a consequent, modify that rule
             if( str(con).strip() == item):
-                self.ModifyRule(con, value)
+                self.RemoveRule(con)
+                self.AddRule(con, value)
                 continue
 
-            ant = Statement(ant_str)
-            ant.ReplaceWithValue(item, value)
-            self.ModifyRule(con, str(ant) )
+            # Propagate to each of the rules for each consequent
+            new_rules = []
+            for ant_str in ant_lst:
+                ant = Statement(ant_str)
+                ant.ReplaceWithValue(item, value)
+                new_rules.append( str(ant) )
+
+            # Place the new heap of rules
+            self.RemoveRule(con)
+            for nrule in new_rules:
+                self.AddRule(con, nrule)
 
         print("Rules after propagation")
         print(self)

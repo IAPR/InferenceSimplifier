@@ -1,9 +1,16 @@
 #!/usr/bin/env python3
 from statement import Statement
+from antecedent import Antecedent
+from consequent import Consequent
 
-print("None ID", id(None) % 1000)
-st = Statement("( ( ( ( T v q ) v a ) v b ) v o ) v f")
-st.SimplifyToMinimum()
-print("None ID", id(None) % 1000)
-for leaf in st.tree:
-    print( repr(leaf) )
+st = Antecedent("( (d v o) ^ c ) ^ (iA v iP)")
+print("\n=== BRANCHING... ===")
+sd = st.Branch()
+print("\n========================= BRANCHES ==============================")
+for s in sd:
+    print(s)
+
+#st = Statement("p v ( q ^ r)")
+#st.SimplifyToMinimum()
+#st1 = Statement("p ^ ( q v r)")
+#st.SimplifyToMinimum()
