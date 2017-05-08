@@ -3,6 +3,7 @@ from statement import Statement
 class Antecedent(Statement):
     def __init__(self, st):
         super(Antecedent, self).__init__(st)
+        self.SimplifyFND()
 
     def __str__(self):
         return super(Antecedent, self).__str__()
@@ -17,27 +18,6 @@ class Antecedent(Statement):
         ant.tree = new_tree
         ant.root = new_leaf
         return ant 
-
-    def SimplifyFND(self):
-        # Simplify tree
-        # Order: <-> >> -> >> v >> ^
-        has_changed = True
-        while(has_changed):
-            has_changed = False
-            for leaf in self.tree:
-                if( leaf == None ):
-                    raise Exception
-                elif( self.MaterialEquivalence(leaf) ):
-                    has_changed = True
-                elif( self.MaterialImplication(leaf) ):
-                    has_changed = True
-                elif( self.DeMorganAND(leaf) ):
-                    has_changed = True
-                elif( self.DeMorganOR(leaf) ):
-                    has_changed = True
-                elif( self.DistribAND(leaf) ):
-                    has_changed = True
-                    self.SimplifyToMinimum()
 
     def Branch(self):
         def FindBranches(ant):

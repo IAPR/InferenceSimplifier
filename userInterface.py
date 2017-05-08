@@ -130,10 +130,10 @@ class QuestionWidget(QWidget):
                 self.ruleHeap.Propagate(con, ant)
                 self.reasoned.append(con)
             # If rule has already been found, check for inconsistencies
-            elif( not self.valueLog.GetRule(con) == ant):
+            elif( not self.valueLog.GetRules(con)[0] == ant):
                 msg = QMessageBox()
                 msg.setText("Inconsistency has been found: " + con + " was " + 
-                        self.valueLog.GetRule(con) + " but now it is " + ant)
+                        self.valueLog.GetRules(con)[0] + " but now it is " + ant)
                 msg.exec()
 
 
@@ -172,12 +172,15 @@ class QuestionWidget(QWidget):
         message.exec()
 
     def Explain(self):
-        explain_str = "Solution has been found: {0}\n".format(self.valueLog.GetRule(self.objective))
+        final_value = self.valueLog.GetRules(self.objective)[0]
+        explain_str = "Solution has been found: {0}\n".format(final_value)
         for re in self.reasoned:
             past_lst = self.valueLog.GetPastKeys(re)
-            explain_str += "\n{0} is {1} because:\n".format(re, self.valueLog.GetRule(re))
+            explain_str += "\n{0} is {1} because:\n".format(re, self.valueLog.GetRules(re)[0])
             for p in past_lst:
-                explain_str += "\t{0} = {1}\n".format(p, self.valueLog.GetRule(p))
+                rules = self.valueLog.GetRules(p)
+                for rule in rules:
+                    explain_str += "\t{0} = {1}\n".format(p, rule)
         msg = QMessageBox()
         msg.setText(explain_str)
         msg.exec()
