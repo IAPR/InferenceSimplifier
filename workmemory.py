@@ -194,7 +194,7 @@ class WorkMemory:
             new_id_list = tmp.ListIdentifiers()
             # Queue all identifiers that has not been checked already
             for nid in new_id_list:
-                if(nid not in id_checked):
+                if(nid not in id_checked and nid not in id_queue):
                     id_queue.append(nid)
 
         # Generate a new workmemory object for storing the new rules
