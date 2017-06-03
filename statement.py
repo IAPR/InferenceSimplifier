@@ -8,11 +8,12 @@ class Statement:
     def __init__(self, statement):
         self.tree = []
         self.root_stack = []
-        self.id_next_sign = True
-        self.op_next_sign = True
+        # Sign: (par_open, sign)
+        self.id_next_sign = []
+        self.op_next_sign = []
         self.par_open = 0
 
-        print("BEGIN PARSING STATEMENT:", statement)
+        print("NEW STATEMENT:", statement)
         # Creating empty tree
         if(statement is None):
             return
@@ -43,18 +44,17 @@ class Statement:
             new_symbol = Symbol(psym)
             self.AppendSymbol(new_symbol)
             # DEBUG
-            # print("SYMBOL", repr(new_symbol))
-            # print("__TREE", self.tree) 
-            # print("STACK_", self.root_stack)
-            # print("PAOPEN", self.par_open)
-            # print("IDSIGN", self.id_next_sign)
-            # print("OPSIGN", self.op_next_sign, "\n\n")
+            print("SYMBOL", repr(new_symbol))
+            print("__TREE", self.tree) 
+            print("STACK_", self.root_stack)
+            print("PAOPEN", self.par_open)
+            print("IDSIGN", self.id_next_sign)
+            print("OPSIGN", self.op_next_sign, "\n\n")
 
             i += 1
 
         #self.NormalizeTree()
         self.FindRealRoot()
-        self.SimplifyToMinimum()
         #print("ORIGINAL STATEMENT:", statement)
         #print("END PARSING STATEMENT:", self.__str__())
 
@@ -80,50 +80,69 @@ class Statement:
     def AppendSymbol(self, symbol):
 
         if(symbol.code == "NEGATION"):
-            if(not self.id_next_sign):
-                raise ParserSyntaxError
-
-            self.id_next_sign = False
+            self.id_next_sign.append( (self.par_open, False) )
 
         elif(symbol.code == "PAR_BEGIN"):
-            if(not self.op_next_sign):
-                raise ParserSyntaxError
-
             self.par_open += 1
-            self.op_next_sign = self.id_next_sign
-            self.id_next_sign = True
+            if(self.id_next_sign != []):
+                id_next = self.id_next_sign.pop()
+                id_next = ( self.par_open, id_next[1])
+                self.op_next_sign.append(id_next)
 
         elif(symbol.code == "PAR_END"):
-            if(not self.id_next_sign or not self.op_next_sign):
-                raise ParserSyntaxError
-            elif( len(self.tree) == 0):
+            if( len(self.tree) == 0):
                 raise ParserSyntaxError
             elif( len(self.root_stack) == 0):
                 raise ParserSyntaxError
             self.root_stack.pop()
+            self.par_open -= 1
 
         elif(symbol.code == "IDENTIFIER"):
+            # Get Sign information
+            id_sign = True
+            found_sign = False
+            if(self.id_next_sign != []):
+                sign_info = self.id_next_sign[-1]
+                if(sign_info[0] == self.par_open):
+                    id_sign = sign_info[1]
+                    found_sign = True
+            # Add leaf to tree
             if(len(self.tree) == 0):
-                newLeaf = Leaf(symbol, self.id_next_sign, None, None, None)
+                newLeaf = Leaf(symbol, id_sign, None, None, None)
                 self.tree.append(newLeaf)
                 self.root_stack.append(newLeaf)
             else:
                 root = self.root_stack[-1]
-                newLeaf = Leaf(symbol, self.id_next_sign, root, None, None)
+                newLeaf = Leaf(symbol, id_sign, root, None, None)
                 self.tree.append(newLeaf)
                 root.right = newLeaf
                 if(self.par_open > 0):
                     self.root_stack.append(newLeaf)
-            self.id_next_sign = True
+
+            # Clear flag
+            if(found_sign):
+                self.id_next_sign.pop()
 
         else:
+            # Get Sign information
+            op_sign = True
+            found_sign = False
+            if(self.op_next_sign != []):
+                sign_info = self.op_next_sign[-1]
+                print("SIGN_INFO", sign_info)
+                if(sign_info[0] == self.par_open):
+                    op_sign = sign_info[1]
+                    found_sign = True
+                else:
+                    print("Should", sign_info[0], self.par_open)
+            # Get new operation into tree
             if(len(self.tree) == 0 ):
-                newLeaf = Leaf(symbol, self.op_next_sign, None, None, None)
+                newLeaf = Leaf(symbol, op_sign, None, None, None)
                 self.tree.append(newLeaf)
                 self.root_stack.append(newLeaf)
             else:
                 root = self.root_stack[-1]
-                newLeaf = Leaf(symbol, self.op_next_sign, root.upper, root, None)
+                newLeaf = Leaf(symbol, op_sign, root.upper, root, None)
                 # change root above root
                 uproot = root.upper
                 if(uproot is not None):
@@ -136,6 +155,10 @@ class Statement:
                 self.tree.append(newLeaf)
                 self.root_stack.pop()
                 self.root_stack.append(newLeaf)
+
+            # Clear flag
+            if(found_sign):
+                self.op_next_sign.pop()
 
     def FindRealRoot(self):
         roots = []
