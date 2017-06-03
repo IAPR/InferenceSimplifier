@@ -62,7 +62,7 @@ class Leaf:
 
         # Problem solving for level 0
         if( (level == 0) and (not self.sign) and (self.symbol.code != "IDENTIFIER") ):
-            ret_str += " " + ST["NEGATION"] + ST["PAR_BEGIN"] + " " + ret_str + " " + ST["PAR_END"] + " "
+            ret_str = ST["NEGATION"] + ST["PAR_BEGIN"] + " " + ret_str + " " + ST["PAR_END"] + " "
         return ret_str
 
     def ReplaceInTree(self, mask, value):
